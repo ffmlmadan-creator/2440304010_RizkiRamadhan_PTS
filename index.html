@@ -3,13 +3,473 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kala Seduh | Etalase Biji Kopi & Kebutuhan Seduh</title>
+  <meta name="description" content="Kala Seduh menghadirkan kurasi biji kopi lokal dan perlengkapan seduh harian untuk rutinitas kopi di rumah maupun kedai.">
+  <title>Kala Seduh | Etalase Biji Kopi Lokal & Kebutuhan Seduh</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="site-header" id="top"></header>
-  <main id="main-content"></main>
-  <footer class="site-footer"></footer>
+  <a href="#main-content" class="skip-link">Lewati ke konten utama</a>
+
+  <header class="site-header" id="top">
+    <div class="container header-inner">
+      <a href="#top" class="brand-wordmark" aria-label="Beranda Kala Seduh">
+        <span class="brand-placeholder-tag" aria-hidden="true">[LOGO]</span>
+        <span class="brand-name-text">Kala Seduh</span>
+        <span class="brand-tagline-text">Roastery &amp; Pantry</span>
+      </a>
+
+      <form class="header-search-form" id="header-search-form" role="search" aria-label="Pencarian cepat katalog">
+        <label for="header-search-input" class="visually-hidden">Cari produk di katalog</label>
+        <input
+          type="search"
+          id="header-search-input"
+          class="header-search-input"
+          placeholder="Cari nama produk, kategori, atau deskripsi..."
+          autocomplete="off"
+        >
+        <button type="submit" class="header-search-btn">Cari</button>
+      </form>
+
+      <button
+        type="button"
+        class="mobile-nav-toggle"
+        id="mobile-nav-toggle"
+        aria-expanded="false"
+        aria-controls="primary-navigation"
+      >
+        Menu
+      </button>
+
+      <nav class="primary-nav" id="primary-navigation" aria-label="Navigasi utama">
+        <ul class="nav-list">
+          <li><a href="#pilihan-utama" class="nav-link">Pilihan Utama</a></li>
+          <li><a href="#katalog" class="nav-link">Jelajahi Katalog</a></li>
+          <li><a href="#konsultasi" class="nav-link">Butuh Rekomendasi?</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <section class="hero-section" id="hero" aria-labelledby="hero-heading">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="editorial-kicker">Kurasi Seduhan Harian</p>
+          <h1 id="hero-heading" class="hero-title">Biji Kopi Lokal, Siap Menemani Seduhanmu.</h1>
+          <p class="hero-description">
+            Temukan pilihan biji kopi dan kebutuhan seduh untuk rutinitas di rumah, mulai dari seduhan manual pagi hari hingga racikan espresso yang konsisten.
+          </p>
+          <div class="hero-actions">
+            <a href="#katalog" class="btn btn-primary">Jelajahi Katalog Produk</a>
+            <a href="#konsultasi" class="btn btn-secondary">Minta Rekomendasi Produk</a>
+          </div>
+          <dl class="hero-notes" aria-label="Karakteristik layanan toko">
+            <div class="hero-note-item">
+              <dt>Transparansi Katalog</dt>
+              <dd>Informasi harga, ketersediaan stok, dan rincian produk ditampilkan apa adanya sesuai data sumber.</dd>
+            </div>
+            <div class="hero-note-item">
+              <dt>Konsultasi Seduh</dt>
+              <dd>Belum yakin memilih produk yang cocok? Tim kami siap membantu lewat formulir permintaan informasi.</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="hero-visual-wrapper">
+          <figure class="hero-visual-card">
+            <div class="hero-svg-stage" role="img" aria-label="Ilustrasi kemasan biji kopi Kala Seduh di atas meja seduh hangat">
+              <svg viewBox="0 0 560 440" xmlns="http://www.w3.org/2000/svg" class="hero-packaging-svg">
+                <rect width="560" height="440" fill="#EFE9DC"/>
+                <circle cx="430" cy="110" r="76" fill="#E3DAC8"/>
+                <rect x="44" y="340" width="472" height="56" fill="#DFD5C0"/>
+                <!-- Coffee server carafe -->
+                <path d="M350 220 H446 L462 330 C464 342 454 352 442 352 H354 C342 352 332 342 334 330 Z" fill="#231710" opacity="0.9"/>
+                <path d="M446 238 H478 C488 238 494 246 494 256 V294 C494 304 488 312 478 312 H458" fill="none" stroke="#231710" stroke-width="10" stroke-linecap="round"/>
+                <rect x="344" y="198" width="108" height="16" rx="4" fill="#5C4332"/>
+                <!-- Main Kraft Coffee Pouch -->
+                <path d="M138 78 H326 L342 356 H122 Z" fill="#FBF9F5" stroke="#231710" stroke-width="3"/>
+                <path d="M138 78 H326 L318 112 H146 Z" fill="#DFD5C0" stroke="#231710" stroke-width="3"/>
+                <!-- Deep Forest Green Editorial Label on Pouch -->
+                <rect x="152" y="136" width="160" height="176" fill="#1E3F2B"/>
+                <rect x="164" y="148" width="136" height="152" fill="none" stroke="#F7F3EB" stroke-width="1.5" opacity="0.6"/>
+                <text x="232" y="178" text-anchor="middle" fill="#F7F3EB" font-family="Georgia, serif" font-size="13" letter-spacing="1.5">KALA SEDUH</text>
+                <text x="232" y="208" text-anchor="middle" fill="#FFFFFF" font-family="Georgia, serif" font-size="21" font-weight="bold">NUSANTARA</text>
+                <text x="232" y="232" text-anchor="middle" fill="#E3DAC8" font-family="sans-serif" font-size="12">ROASTERY &amp; PANTRY</text>
+                <line x1="188" y1="248" x2="276" y2="248" stroke="#E3DAC8" stroke-width="1"/>
+                <text x="232" y="270" text-anchor="middle" fill="#F7F3EB" font-family="sans-serif" font-size="11">KEMASAN 250G</text>
+                <text x="232" y="288" text-anchor="middle" fill="#E3DAC8" font-family="sans-serif" font-size="10">[VISUAL KONSEP KEMASAN]</text>
+                <!-- Coffee beans foreground -->
+                <g transform="translate(88, 336)">
+                  <ellipse cx="22" cy="18" rx="16" ry="11" transform="rotate(-20 22 18)" fill="#231710"/>
+                  <path d="M10 18 Q22 13 34 18" stroke="#F7F3EB" stroke-width="1.5" fill="none"/>
+                </g>
+                <g transform="translate(308, 344)">
+                  <ellipse cx="20" cy="16" rx="15" ry="10" transform="rotate(15 20 16)" fill="#5C4332"/>
+                  <path d="M8 16 Q20 12 32 16" stroke="#F7F3EB" stroke-width="1.5" fill="none"/>
+                </g>
+              </svg>
+            </div>
+            <figcaption class="hero-visual-caption">
+              <span>Ilustrasi konsep kemasan proporsi 4:3</span>
+              <span class="caption-badge">Katalog Sinkronisasi Langsung</span>
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="featured-section" id="pilihan-utama" aria-labelledby="featured-heading">
+      <div class="container">
+        <div class="section-header-row">
+          <div>
+            <p class="editorial-kicker">Sorotan Etalase</p>
+            <h2 id="featured-heading" class="section-title">Pilihan Produk Unggulan</h2>
+          </div>
+          <p class="section-subtitle" id="featured-source-caption">
+            Menampilkan 3 produk pilihan dengan rating tertinggi dari koleksi katalog yang sedang aktif.
+          </p>
+        </div>
+
+        <div class="featured-asymmetric-grid" id="featured-grid" aria-live="polite">
+          <!-- Diisi secara dinamis oleh JavaScript berdasarkan data aktif -->
+        </div>
+      </div>
+    </section>
+
+    <section class="catalog-section" id="katalog" aria-labelledby="catalog-heading">
+      <div class="container">
+        <div class="catalog-top-bar">
+          <div>
+            <p class="editorial-kicker">Eksplorasi Produk</p>
+            <h2 id="catalog-heading" class="section-title">Jelajahi Katalog</h2>
+          </div>
+
+          <div class="catalog-source-controls">
+            <div class="source-switcher-group" role="group" aria-label="Pilih koleksi sumber katalog">
+              <button
+                type="button"
+                class="source-tab-btn active"
+                id="source-api-btn"
+                data-source="api"
+                aria-pressed="true"
+              >
+                Katalog Produk API (Live)
+              </button>
+              <button
+                type="button"
+                class="source-tab-btn"
+                id="source-coffee-btn"
+                data-source="coffee_sample"
+                aria-pressed="false"
+              >
+                Koleksi Biji Kopi ([DATA CONTOH])
+              </button>
+            </div>
+
+            <div class="sync-status-row">
+              <span class="last-updated-label" id="last-updated-text">
+                Terakhir diperbarui: Belum pernah dimuat
+              </span>
+              <button type="button" class="btn-text-action" id="refresh-catalog-btn">
+                Perbarui Katalog
+              </button>
+              <button type="button" class="btn-text-action" id="simulate-error-btn" title="Uji tampilan apabila koneksi ke server terputus">
+                Uji Gangguan Koneksi
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Penjelasan jujur konteks koleksi aktif -->
+        <div class="collection-context-banner" id="collection-context-banner" role="status">
+          <p id="collection-context-text">
+            Menampilkan data produk langsung dari endpoint resmi <code>https://dummyjson.com/products</code> tanpa modifikasi nama atau kategori.
+          </p>
+        </div>
+
+        <!-- Ringkasan Katalog Terintegrasi (Statistik Sederhana Y=1) -->
+        <div class="catalog-summary-strip" aria-label="Ringkasan Katalog">
+          <div class="summary-scope-header">
+            <h3 class="summary-strip-title">Ringkasan Katalog</h3>
+            <span class="summary-scope-badge" id="summary-scope-label">
+              Cakupan: Seluruh Katalog Aktif
+            </span>
+          </div>
+          <dl class="summary-metrics-grid">
+            <div class="summary-metric-item">
+              <dt>Jumlah Produk Tampil</dt>
+              <dd id="stat-product-count">0 dari 0 produk</dd>
+            </div>
+            <div class="summary-metric-item">
+              <dt>Rata-rata Harga</dt>
+              <dd id="stat-average-price">$0.00</dd>
+            </div>
+            <div class="summary-metric-item">
+              <dt>Produk Harga Tertinggi</dt>
+              <dd id="stat-highest-product">-</dd>
+            </div>
+            <div class="summary-metric-item">
+              <dt>Jumlah Kategori</dt>
+              <dd id="stat-category-count">0 kategori</dd>
+            </div>
+          </dl>
+        </div>
+
+        <!-- Bar Filter & Pencarian -->
+        <form class="catalog-filter-bar" id="catalog-filter-form" aria-label="Filter katalog produk">
+          <div class="filter-field filter-field-search">
+            <label for="catalog-search-input">Cari Produk</label>
+            <input
+              type="search"
+              id="catalog-search-input"
+              placeholder="Ketik nama produk atau kata kunci..."
+              autocomplete="off"
+            >
+          </div>
+
+          <div class="filter-field">
+            <label for="category-filter">Kategori Produk</label>
+            <select id="category-filter">
+              <option value="ALL">Semua Kategori</option>
+            </select>
+          </div>
+
+          <div class="filter-field">
+            <label for="availability-filter">Ketersediaan Stok</label>
+            <select id="availability-filter">
+              <option value="ALL">Semua Status Stok</option>
+              <option value="IN_STOCK">Tersedia (Stok &gt; 10)</option>
+              <option value="LOW_STOCK">Stok Terbatas (1 - 10)</option>
+              <option value="OUT_OF_STOCK">Stok Habis (0)</option>
+            </select>
+          </div>
+
+          <div class="filter-field">
+            <label for="sort-filter">Urutkan</label>
+            <select id="sort-filter">
+              <option value="DEFAULT">Urutan Awal</option>
+              <option value="PRICE_ASC">Harga: Rendah ke Tinggi</option>
+              <option value="PRICE_DESC">Harga: Tinggi ke Rendah</option>
+              <option value="TITLE_ASC">Nama Produk: A ke Z</option>
+            </select>
+          </div>
+
+          <div class="filter-actions">
+            <button type="button" class="btn btn-secondary btn-reset" id="reset-filter-btn">
+              Atur Ulang Filter
+            </button>
+          </div>
+        </form>
+
+        <!-- State 1: Loading State -->
+        <div class="catalog-state-box loading-state" id="catalog-loading" role="status" aria-live="polite">
+          <div class="loading-pulse-indicator" aria-hidden="true"></div>
+          <p class="state-title">Memuat katalog produk...</p>
+          <p class="state-desc">Mohon tunggu sebentar, sedang menyinkronkan daftar produk terbaru.</p>
+        </div>
+
+        <!-- State 2: Error State (Challenge C=1: Tombol Retry + Timestamp sebelumnya tetap tampil) -->
+        <div class="catalog-state-box error-state hidden" id="catalog-error" role="alert">
+          <h3 class="state-title">Katalog Belum Dapat Diperbarui</h3>
+          <p class="state-desc" id="catalog-error-message">
+            Terjadi kendala saat menghubungi sumber data katalog. Silakan periksa koneksi internet Anda lalu coba kembali.
+          </p>
+          <p class="error-timestamp-note" id="error-last-updated-note">
+            Waktu terakhir katalog berhasil dimuat: Belum tersedia.
+          </p>
+          <div class="error-actions">
+            <button type="button" class="btn btn-primary" id="retry-fetch-btn">
+              Coba Lagi
+            </button>
+            <button type="button" class="btn btn-secondary" id="fallback-snapshot-btn">
+              Gunakan Salinan Cadangan API
+            </button>
+          </div>
+        </div>
+
+        <!-- State 3: Empty State (Filter tidak menemukan hasil) -->
+        <div class="catalog-state-box empty-state hidden" id="catalog-empty" role="status" aria-live="polite">
+          <h3 class="state-title">Produk Tidak Ditemukan</h3>
+          <p class="state-desc" id="catalog-empty-desc">
+            Tidak ada produk yang cocok dengan kombinasi kata kunci dan filter yang Anda pilih.
+          </p>
+          <button type="button" class="btn btn-primary" id="empty-reset-btn">
+            Kembalikan Katalog ke Kondisi Awal
+          </button>
+        </div>
+
+        <!-- State 4: Success Product Grid -->
+        <div class="product-grid" id="catalog-grid" aria-live="polite">
+          <!-- Kartu produk dirender melalui JavaScript -->
+        </div>
+      </div>
+    </section>
+
+    <section class="inquiry-section" id="konsultasi" aria-labelledby="inquiry-heading">
+      <div class="container inquiry-layout">
+        <div class="inquiry-intro">
+          <p class="editorial-kicker">Layanan Pelanggan &amp; Konsultasi</p>
+          <h2 id="inquiry-heading" class="section-title">Butuh Rekomendasi atau Informasi Produk?</h2>
+          <p class="inquiry-lead">
+            Sampaikan kebutuhan produk, takaran pembelian, atau preferensi seduhan Anda. Kami akan menyiapkan rincian spesifikasi produk yang sesuai.
+          </p>
+          <div class="inquiry-info-box">
+            <h3 class="info-box-title">Jam Layanan Ruang Seduh</h3>
+            <ul class="info-box-list">
+              <li><strong>Senin s.d. Jumat:</strong> 08.00 - 20.00 WITA</li>
+              <li><strong>Sabtu &amp; Minggu:</strong> 09.00 - 18.00 WITA</li>
+              <li><strong>Lokasi Etalase:</strong> Tarakan, Kalimantan Utara</li>
+            </ul>
+          </div>
+
+          <div class="saved-inquiries-panel" id="saved-inquiries-panel">
+            <div class="saved-inquiries-header">
+              <h3 class="info-box-title">Riwayat Permintaan Tersimpan di Perangkat Ini</h3>
+              <button type="button" class="btn-text-action" id="clear-inquiries-btn">Hapus Riwayat</button>
+            </div>
+            <ul class="saved-inquiries-list" id="saved-inquiries-list">
+              <li class="saved-inquiry-empty">Belum ada permintaan informasi yang disimpan.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="inquiry-form-card">
+          <form id="product-inquiry-form" novalidate>
+            <div class="form-group">
+              <label for="inquiry-name">Nama Lengkap <span class="required-mark" aria-hidden="true">*</span></label>
+              <input
+                type="text"
+                id="inquiry-name"
+                name="customerName"
+                placeholder="Contoh: Rizki Ramadhan"
+                aria-describedby="inquiry-name-hint inquiry-name-error"
+                required
+              >
+              <span id="inquiry-name-hint" class="field-hint">
+                Wajib diisi minimal 5 karakter (spasi di awal dan akhir tidak dihitung).
+              </span>
+              <p id="inquiry-name-error" class="field-error hidden" role="alert"></p>
+            </div>
+
+            <div class="form-group">
+              <label for="inquiry-contact">Alamat Email atau Nomor WhatsApp <span class="required-mark" aria-hidden="true">*</span></label>
+              <input
+                type="text"
+                id="inquiry-contact"
+                name="customerContact"
+                placeholder="Contoh: nama@email.com atau 081234567890"
+                aria-describedby="inquiry-contact-error"
+                required
+              >
+              <p id="inquiry-contact-error" class="field-error hidden" role="alert"></p>
+            </div>
+
+            <div class="form-row-two">
+              <div class="form-group">
+                <label for="inquiry-product">Produk yang Ditanyakan <span class="required-mark" aria-hidden="true">*</span></label>
+                <select id="inquiry-product" name="productInterest" aria-describedby="inquiry-product-error" required>
+                  <option value="">Pilih produk dari katalog...</option>
+                </select>
+                <p id="inquiry-product-error" class="field-error hidden" role="alert"></p>
+              </div>
+
+              <div class="form-group">
+                <label for="inquiry-purpose">Kebutuhan Penggunaan</label>
+                <select id="inquiry-purpose" name="usagePurpose">
+                  <option value="Seduhan Harian di Rumah">Seduhan Harian di Rumah</option>
+                  <option value="Kebutuhan Kedai / Komersial">Kebutuhan Kedai / Komersial</option>
+                  <option value="Pemesanan Jumlah Banyak">Pemesanan Jumlah Banyak</option>
+                  <option value="Pertanyaan Spesifikasi Produk">Pertanyaan Spesifikasi Produk</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="inquiry-notes">Pesan atau Pertanyaan Spesifik <span class="required-mark" aria-hidden="true">*</span></label>
+              <textarea
+                id="inquiry-notes"
+                name="inquiryNotes"
+                rows="4"
+                placeholder="Tuliskan rincian pertanyaan mengenai ketersediaan stok, profil produk, atau jumlah kebutuhan..."
+                aria-describedby="inquiry-notes-error"
+                required
+              ></textarea>
+              <p id="inquiry-notes-error" class="field-error hidden" role="alert"></p>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">Simpan Permintaan Informasi</button>
+              <button type="reset" class="btn btn-secondary" id="reset-inquiry-btn">Bersihkan Formulir</button>
+            </div>
+
+            <div id="inquiry-success-banner" class="form-success-banner hidden" role="status" aria-live="polite">
+              <h3 class="success-banner-title" id="inquiry-success-title">Permintaan Informasi Tercatat</h3>
+              <p class="success-banner-body" id="inquiry-success-body"></p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-brand-col">
+        <a href="#top" class="footer-wordmark">
+          <span class="brand-placeholder-tag">[LOGO]</span> Kala Seduh Roastery &amp; Pantry
+        </a>
+        <p class="footer-description">
+          Etalase digital kurasi biji kopi lokal dan kebutuhan harian dengan informasi harga serta stok yang transparan.
+        </p>
+      </div>
+
+      <nav class="footer-nav" aria-label="Tautan navigasi bagian halaman">
+        <h2 class="footer-heading">Navigasi Halaman</h2>
+        <ul class="footer-links">
+          <li><a href="#hero">Beranda</a></li>
+          <li><a href="#pilihan-utama">Pilihan Utama</a></li>
+          <li><a href="#katalog">Jelajahi Katalog</a></li>
+          <li><a href="#konsultasi">Permintaan Informasi</a></li>
+        </ul>
+      </nav>
+
+      <div class="footer-meta-col">
+        <h2 class="footer-heading">Kontak &amp; Layanan</h2>
+        <p>Email: <a href="mailto:halo@kalaseduh.id">halo@kalaseduh.id</a></p>
+        <p>Tarakan, Kalimantan Utara</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modal Detail Produk (Dapat ditutup dengan tombol Escape atau tombol Tutup) -->
+  <dialog class="product-modal" id="product-detail-modal" aria-labelledby="modal-product-title">
+    <div class="modal-inner">
+      <div class="modal-header">
+        <span class="modal-category-badge" id="modal-product-category">Kategori</span>
+        <button type="button" class="modal-close-btn" id="modal-close-btn" aria-label="Tutup rincian produk">
+          Tutup (Esc)
+        </button>
+      </div>
+      <div class="modal-body-grid">
+        <div class="modal-image-wrap" id="modal-image-container"></div>
+        <div class="modal-info-col">
+          <h2 class="modal-title" id="modal-product-title">Nama Produk</h2>
+          <p class="modal-price" id="modal-product-price">$0.00</p>
+          <p class="modal-description" id="modal-product-description"></p>
+          <dl class="modal-specs-list" id="modal-product-specs"></dl>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-primary" id="modal-inquire-btn">
+              Tanyakan Produk Ini di Formulir
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
   <script src="app.js" defer></script>
 </body>
 </html>
