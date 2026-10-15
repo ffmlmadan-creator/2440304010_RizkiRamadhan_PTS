@@ -245,3 +245,45 @@ async function fetchProductsFromApi(customUrl = API_CONFIG.PRIMARY_ENDPOINT) {
   }
   return payload.products;
 }
+
+// Pembuatan ilustrasi SVG konsisten dengan rasio 4:3 untuk item tanpa gambar eksternal
+function createPackagingSvgDataUri(title, category, isSample) {
+  const safeTitle = String(title).replace(/\[DATA CONTOH\]\s*/i, '').slice(0, 26);
+  const safeCat = String(category).toUpperCase().slice(0, 22);
+  const badgeText = isSample ? '[DATA CONTOH]' : 'KATALOG PRODUK';
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+    <rect width="400" height="300" fill="#EFE9DC"/>
+    <rect x="110" y="28" width="180" height="244" rx="6" fill="#FBF9F5" stroke="#231710" stroke-width="2.5"/>
+    <rect x="126" y="64" width="148" height="156" fill="#1E3F2B"/>
+    <text x="200" y="96" text-anchor="middle" fill="#E3DAC8" font-family="Georgia, serif" font-size="11" letter-spacing="1">${badgeText}</text>
+    <text x="200" y="132" text-anchor="middle" fill="#FFFFFF" font-family="Georgia, serif" font-size="14" font-weight="bold">${safeTitle}</text>
+    <line x1="150" y1="152" x2="250" y2="152" stroke="#E3DAC8" stroke-width="1"/>
+    <text x="200" y="178" text-anchor="middle" fill="#F7F3EB" font-family="sans-serif" font-size="11">${safeCat}</text>
+    <text x="200" y="204" text-anchor="middle" fill="#E3DAC8" font-family="sans-serif" font-size="10">KALA SEDUH</text>
+  </svg>`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
+function formatPriceUSD(value) {
+  const num = Number(value) || 0;
+  return '$' + num.toFixed(2);
+}
+
+function formatCategoryLabel(slug) {
+  if (!slug) return 'Umum';
+  return String(slug)
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+function getStockStatusMeta(stockCount) {
+  const stock = Number(stockCount) || 0;
+  if (stock <= 0) {
+    return { code: 'OUT_OF_STOCK', label: 'Stok Habis (0)', cssClass: 'stock-out' };
+  }
+  if (stock <= 10) {
+    return { code: 'LOW_STOCK', label: 'Stok Terbatas (' + stock + ')', cssClass: 'stock-low' };
+  }
+  return { code: 'IN_STOCK', label: 'Tersedia (' + stock + ')', cssClass: 'stock-ok' };
+}
