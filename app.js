@@ -198,3 +198,50 @@ const SAMPLE_COFFEE_COLLECTION = [
     isSamplePlaceholder: true
   }
 ];
+
+// State terpusat aplikasi
+const appState = {
+  activeSource: 'api', // 'api' | 'coffee_sample'
+  apiProducts: [],
+  activeDataset: [],
+  filteredProducts: [],
+  filters: {
+    searchQuery: '',
+    category: 'ALL',
+    availability: 'ALL',
+    sortBy: 'DEFAULT'
+  },
+  isSimulatingError: false,
+  selectedModalProduct: null
+};
+
+// Fungsi utilitas penyimpanan aman ke localStorage
+function safeGetStorage(key, fallbackValue = null) {
+  try {
+    const raw = window.localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallbackValue;
+  } catch (err) {
+    return fallbackValue;
+  }
+}
+
+function safeSetStorage(key, value) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch (err) {
+    // Abaikan jika browser membatasi akses localStorage pada mode privat
+  }
+}
+
+// Pengambilan data REST API menggunakan Fetch API dan async/await
+async function fetchProductsFromApi(customUrl = API_CONFIG.PRIMARY_ENDPOINT) {
+  const response = await fetch(customUrl);
+  if (!response.ok) {
+    throw new Error('Status HTTP ' + response.status + ' saat memuat katalog.');
+  }
+  const payload = await response.json();
+  if (!payload || !Array.isArray(payload.products)) {
+    throw new Error('Format JSON katalog tidak sesuai spesifikasi.');
+  }
+  return payload.products;
+}
