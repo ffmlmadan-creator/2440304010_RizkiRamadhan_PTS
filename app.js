@@ -350,3 +350,45 @@ function computeCatalogStatistics(filteredItems, totalDataset) {
     categoryCountText: uniqueCategories.size + ' kategori'
   };
 }
+
+// Validasi Form Permintaan Informasi Produk (Digit Z = 0: Nama minimal 5 karakter setelah trim)
+function validateInquiryForm(values) {
+  const errors = {};
+  const trimmedName = String(values.name || '').trim();
+  const trimmedContact = String(values.contact || '').trim();
+  const selectedProduct = String(values.product || '').trim();
+  const trimmedNotes = String(values.notes || '').trim();
+
+  if (trimmedName.length < 5) {
+    errors.name =
+      'Nama lengkap wajib minimal 5 karakter tanpa menghitung spasi di awal/akhir (saat ini ' +
+      trimmedName.length +
+      ' karakter).';
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const phoneRegex = /^[0-9+\-\s()]{8,18}$/;
+  if (!trimmedContact || (!emailRegex.test(trimmedContact) && !phoneRegex.test(trimmedContact))) {
+    errors.contact = 'Masukkan alamat email yang valid atau nomor WhatsApp/telepon (minimal 8 digit).';
+  }
+
+  if (!selectedProduct) {
+    errors.product = 'Silakan pilih salah satu produk dari daftar katalog.';
+  }
+
+  if (trimmedNotes.length < 10) {
+    errors.notes = 'Tuliskan rincian pertanyaan minimal 10 karakter agar kebutuhan Anda jelas.';
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+    cleaned: {
+      name: trimmedName,
+      contact: trimmedContact,
+      product: selectedProduct,
+      purpose: values.purpose,
+      notes: trimmedNotes
+    }
+  };
+}
