@@ -392,3 +392,731 @@ function validateInquiryForm(values) {
     }
   };
 }
+
+// ==========================================================================
+// Pengelolaan DOM, State Loading/Error/Empty, Retry & Timestamp (Challenge C=1)
+// ==========================================================================
+
+const dom = {};
+
+function cacheDomElements() {
+  dom.headerSearchForm = document.getElementById('header-search-form');
+  dom.headerSearchInput = document.getElementById('header-search-input');
+  dom.mobileNavToggle = document.getElementById('mobile-nav-toggle');
+  dom.primaryNav = document.getElementById('primary-navigation');
+
+  dom.featuredGrid = document.getElementById('featured-grid');
+  dom.featuredSourceCaption = document.getElementById('featured-source-caption');
+
+  dom.sourceApiBtn = document.getElementById('source-api-btn');
+  dom.sourceCoffeeBtn = document.getElementById('source-coffee-btn');
+  dom.lastUpdatedText = document.getElementById('last-updated-text');
+  dom.refreshCatalogBtn = document.getElementById('refresh-catalog-btn');
+  dom.simulateErrorBtn = document.getElementById('simulate-error-btn');
+  dom.collectionContextText = document.getElementById('collection-context-text');
+
+  dom.summaryScopeLabel = document.getElementById('summary-scope-label');
+  dom.statProductCount = document.getElementById('stat-product-count');
+  dom.statAveragePrice = document.getElementById('stat-average-price');
+  dom.statHighestProduct = document.getElementById('stat-highest-product');
+  dom.statCategoryCount = document.getElementById('stat-category-count');
+
+  dom.catalogFilterForm = document.getElementById('catalog-filter-form');
+  dom.catalogSearchInput = document.getElementById('catalog-search-input');
+  dom.categoryFilter = document.getElementById('category-filter');
+  dom.availabilityFilter = document.getElementById('availability-filter');
+  dom.sortFilter = document.getElementById('sort-filter');
+  dom.resetFilterBtn = document.getElementById('reset-filter-btn');
+
+  dom.catalogLoading = document.getElementById('catalog-loading');
+  dom.catalogError = document.getElementById('catalog-error');
+  dom.catalogErrorMessage = document.getElementById('catalog-error-message');
+  dom.errorLastUpdatedNote = document.getElementById('error-last-updated-note');
+  dom.retryFetchBtn = document.getElementById('retry-fetch-btn');
+  dom.fallbackSnapshotBtn = document.getElementById('fallback-snapshot-btn');
+
+  dom.catalogEmpty = document.getElementById('catalog-empty');
+  dom.emptyResetBtn = document.getElementById('empty-reset-btn');
+  dom.catalogGrid = document.getElementById('catalog-grid');
+
+  dom.inquiryForm = document.getElementById('product-inquiry-form');
+  dom.inquiryName = document.getElementById('inquiry-name');
+  dom.inquiryNameError = document.getElementById('inquiry-name-error');
+  dom.inquiryContact = document.getElementById('inquiry-contact');
+  dom.inquiryContactError = document.getElementById('inquiry-contact-error');
+  dom.inquiryProduct = document.getElementById('inquiry-product');
+  dom.inquiryProductError = document.getElementById('inquiry-product-error');
+  dom.inquiryPurpose = document.getElementById('inquiry-purpose');
+  dom.inquiryNotes = document.getElementById('inquiry-notes');
+  dom.inquiryNotesError = document.getElementById('inquiry-notes-error');
+  dom.resetInquiryBtn = document.getElementById('reset-inquiry-btn');
+  dom.inquirySuccessBanner = document.getElementById('inquiry-success-banner');
+  dom.inquirySuccessBody = document.getElementById('inquiry-success-body');
+  dom.savedInquiriesList = document.getElementById('saved-inquiries-list');
+  dom.clearInquiriesBtn = document.getElementById('clear-inquiries-btn');
+
+  dom.productModal = document.getElementById('product-detail-modal');
+  dom.modalCloseBtn = document.getElementById('modal-close-btn');
+  dom.modalCategory = document.getElementById('modal-product-category');
+  dom.modalImageContainer = document.getElementById('modal-image-container');
+  dom.modalTitle = document.getElementById('modal-product-title');
+  dom.modalPrice = document.getElementById('modal-product-price');
+  dom.modalDescription = document.getElementById('modal-product-description');
+  dom.modalSpecs = document.getElementById('modal-product-specs');
+  dom.modalInquireBtn = document.getElementById('modal-inquire-btn');
+}
+
+function updateTimestampDisplay() {
+  const savedTimestamp = safeGetStorage(API_CONFIG.STORAGE_KEYS.LAST_SUCCESS_SYNC, null);
+  if (savedTimestamp) {
+    dom.lastUpdatedText.textContent = 'Terakhir diperbarui: ' + savedTimestamp;
+    dom.errorLastUpdatedNote.textContent =
+      'Waktu terakhir katalog berhasil dimuat: ' + savedTimestamp;
+  } else {
+    dom.lastUpdatedText.textContent = 'Terakhir diperbarui: Belum pernah dimuat';
+    dom.errorLastUpdatedNote.textContent =
+      'Waktu terakhir katalog berhasil dimuat: Belum ada riwayat pemuatan sebelumnya.';
+  }
+}
+
+function recordSuccessfulSyncTimestamp() {
+  const now = new Date();
+  const formatted = now.toLocaleString('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+  safeSetStorage(API_CONFIG.STORAGE_KEYS.LAST_SUCCESS_SYNC, formatted);
+  updateTimestampDisplay();
+}
+
+function showLoadingState() {
+  dom.catalogLoading.classList.remove('hidden');
+  dom.catalogError.classList.add('hidden');
+  dom.catalogEmpty.classList.add('hidden');
+  dom.catalogGrid.classList.add('hidden');
+}
+
+function showErrorState(friendlyMessage) {
+  dom.catalogLoading.classList.add('hidden');
+  dom.catalogError.classList.remove('hidden');
+  dom.catalogEmpty.classList.add('hidden');
+  dom.catalogGrid.classList.add('hidden');
+  dom.catalogErrorMessage.textContent = friendlyMessage;
+  updateTimestampDisplay();
+}
+
+function createProductVisualElement(product) {
+  const img = document.createElement('img');
+  img.alt = 'Foto produk ' + product.title;
+  img.loading = 'lazy';
+  const fallbackUri = createPackagingSvgDataUri(
+    product.title,
+    product.category,
+    Boolean(product.isSamplePlaceholder)
+  );
+
+  if (product.thumbnail && !product.isSamplePlaceholder) {
+    img.src = product.thumbnail;
+    img.addEventListener('error', () => {
+      img.src = fallbackUri;
+    }, { once: true });
+  } else {
+    img.src = fallbackUri;
+  }
+  return img;
+}
+
+function renderFeaturedSection(dataset) {
+  dom.featuredGrid.replaceChildren();
+  if (!dataset || dataset.length === 0) {
+    const emptyNote = document.createElement('p');
+    emptyNote.textContent = 'Produk unggulan akan tampil setelah katalog selesai dimuat.';
+    dom.featuredGrid.appendChild(emptyNote);
+    return;
+  }
+
+  // Ambil 3 produk dengan rating tertinggi menggunakan sort()
+  const topThree = [...dataset]
+    .sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0))
+    .slice(0, 3);
+
+  const primaryItem = topThree[0];
+  const secondaryItems = topThree.slice(1);
+
+  if (primaryItem) {
+    const primaryCard = document.createElement('article');
+    primaryCard.className = 'featured-primary-card';
+
+    const mediaDiv = document.createElement('div');
+    mediaDiv.className = 'product-media';
+    mediaDiv.appendChild(createProductVisualElement(primaryItem));
+
+    const contentDiv = document.createElement('div');
+    const stockMeta = getStockStatusMeta(primaryItem.stock);
+
+    const topMeta = document.createElement('div');
+    topMeta.className = 'product-meta-top';
+
+    const catBadge = document.createElement('span');
+    catBadge.className = 'product-category-tag';
+    catBadge.textContent = formatCategoryLabel(primaryItem.category);
+
+    const stockBadge = document.createElement('span');
+    stockBadge.className = 'product-stock-tag ' + stockMeta.cssClass;
+    stockBadge.textContent = stockMeta.label;
+
+    topMeta.append(catBadge, stockBadge);
+
+    const titleEl = document.createElement('h3');
+    titleEl.className = 'product-title';
+    titleEl.textContent = primaryItem.title;
+
+    const descEl = document.createElement('p');
+    descEl.className = 'product-desc';
+    descEl.textContent = primaryItem.description;
+
+    const footerDiv = document.createElement('div');
+    footerDiv.className = 'product-footer';
+
+    const priceEl = document.createElement('span');
+    priceEl.className = 'product-price';
+    priceEl.textContent = formatPriceUSD(primaryItem.price);
+
+    const detailBtn = document.createElement('button');
+    detailBtn.type = 'button';
+    detailBtn.className = 'btn btn-primary';
+    detailBtn.textContent = 'Lihat Rincian';
+    detailBtn.addEventListener('click', () => openProductModal(primaryItem.id));
+
+    footerDiv.append(priceEl, detailBtn);
+    contentDiv.append(topMeta, titleEl, descEl, footerDiv);
+    primaryCard.append(mediaDiv, contentDiv);
+    dom.featuredGrid.appendChild(primaryCard);
+  }
+
+  if (secondaryItems.length > 0) {
+    const sideStack = document.createElement('div');
+    sideStack.className = 'featured-side-stack';
+
+    secondaryItems.forEach(item => {
+      const card = document.createElement('article');
+      card.className = 'featured-secondary-card';
+
+      const stockMeta = getStockStatusMeta(item.stock);
+      const topMeta = document.createElement('div');
+      topMeta.className = 'product-meta-top';
+
+      const catBadge = document.createElement('span');
+      catBadge.className = 'product-category-tag';
+      catBadge.textContent = formatCategoryLabel(item.category);
+
+      const stockBadge = document.createElement('span');
+      stockBadge.className = 'product-stock-tag ' + stockMeta.cssClass;
+      stockBadge.textContent = stockMeta.label;
+
+      topMeta.append(catBadge, stockBadge);
+
+      const titleEl = document.createElement('h3');
+      titleEl.className = 'product-title';
+      titleEl.textContent = item.title;
+
+      const descEl = document.createElement('p');
+      descEl.className = 'product-desc';
+      descEl.textContent = item.description;
+
+      const footerDiv = document.createElement('div');
+      footerDiv.className = 'product-footer';
+
+      const priceEl = document.createElement('span');
+      priceEl.className = 'product-price';
+      priceEl.textContent = formatPriceUSD(item.price);
+
+      const detailBtn = document.createElement('button');
+      detailBtn.type = 'button';
+      detailBtn.className = 'btn btn-secondary';
+      detailBtn.textContent = 'Rincian Produk';
+      detailBtn.addEventListener('click', () => openProductModal(item.id));
+
+      footerDiv.append(priceEl, detailBtn);
+      card.append(topMeta, titleEl, descEl, footerDiv);
+      sideStack.appendChild(card);
+    });
+
+    dom.featuredGrid.appendChild(sideStack);
+  }
+}
+
+function populateCategoryAndProductSelects(dataset) {
+  const categories = Array.from(new Set(dataset.map(item => item.category))).sort();
+
+  dom.categoryFilter.replaceChildren();
+  const allOption = document.createElement('option');
+  allOption.value = 'ALL';
+  allOption.textContent = 'Semua Kategori (' + categories.length + ')';
+  dom.categoryFilter.appendChild(allOption);
+
+  categories.forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat;
+    opt.textContent = formatCategoryLabel(cat);
+    dom.categoryFilter.appendChild(opt);
+  });
+
+  // Isi juga pilihan produk pada form permintaan informasi
+  const currentSelected = dom.inquiryProduct.value;
+  dom.inquiryProduct.replaceChildren();
+  const placeholderOpt = document.createElement('option');
+  placeholderOpt.value = '';
+  placeholderOpt.textContent = 'Pilih produk dari katalog...';
+  dom.inquiryProduct.appendChild(placeholderOpt);
+
+  dataset.forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = item.title;
+    opt.textContent = item.title + ' (' + formatPriceUSD(item.price) + ')';
+    dom.inquiryProduct.appendChild(opt);
+  });
+
+  if (currentSelected) {
+    dom.inquiryProduct.value = currentSelected;
+  }
+}
+
+function renderCatalogAndStats() {
+  const dataset = appState.activeDataset;
+  const filtered = computeFilteredProducts(dataset, appState.filters);
+  appState.filteredProducts = filtered;
+
+  const isFiltered =
+    appState.filters.searchQuery.trim() !== '' ||
+    appState.filters.category !== 'ALL' ||
+    appState.filters.availability !== 'ALL';
+
+  dom.summaryScopeLabel.textContent = isFiltered
+    ? 'Cakupan: Hasil Penyaringan Aktif'
+    : 'Cakupan: Seluruh Katalog Aktif';
+
+  const stats = computeCatalogStatistics(filtered, dataset);
+  dom.statProductCount.textContent = stats.countText;
+  dom.statAveragePrice.textContent = stats.averagePriceText;
+  dom.statHighestProduct.textContent = stats.highestProductText;
+  dom.statCategoryCount.textContent = stats.categoryCountText;
+
+  dom.catalogLoading.classList.add('hidden');
+  dom.catalogError.classList.add('hidden');
+
+  if (filtered.length === 0) {
+    dom.catalogEmpty.classList.remove('hidden');
+    dom.catalogGrid.classList.add('hidden');
+    return;
+  }
+
+  dom.catalogEmpty.classList.add('hidden');
+  dom.catalogGrid.classList.remove('hidden');
+  dom.catalogGrid.replaceChildren();
+
+  filtered.forEach(product => {
+    const card = document.createElement('article');
+    card.className = 'product-card';
+
+    const mediaDiv = document.createElement('div');
+    mediaDiv.className = 'product-media';
+    mediaDiv.appendChild(createProductVisualElement(product));
+
+    const bodyDiv = document.createElement('div');
+    bodyDiv.className = 'product-body';
+
+    const metaTop = document.createElement('div');
+    metaTop.className = 'product-meta-top';
+
+    const catTag = document.createElement('span');
+    catTag.className = 'product-category-tag';
+    catTag.textContent = formatCategoryLabel(product.category);
+
+    const stockMeta = getStockStatusMeta(product.stock);
+    const stockTag = document.createElement('span');
+    stockTag.className = 'product-stock-tag ' + stockMeta.cssClass;
+    stockTag.textContent = stockMeta.label;
+
+    metaTop.append(catTag, stockTag);
+
+    const titleEl = document.createElement('h3');
+    titleEl.className = 'product-title';
+    titleEl.textContent = product.title;
+
+    const descEl = document.createElement('p');
+    descEl.className = 'product-desc';
+    descEl.textContent = product.description;
+
+    const footerDiv = document.createElement('div');
+    footerDiv.className = 'product-footer';
+
+    const priceEl = document.createElement('span');
+    priceEl.className = 'product-price';
+    priceEl.textContent = formatPriceUSD(product.price);
+
+    const detailBtn = document.createElement('button');
+    detailBtn.type = 'button';
+    detailBtn.className = 'btn btn-secondary';
+    detailBtn.textContent = 'Lihat Detail';
+    detailBtn.addEventListener('click', () => openProductModal(product.id));
+
+    footerDiv.append(priceEl, detailBtn);
+    bodyDiv.append(metaTop, titleEl, descEl, footerDiv);
+    card.append(mediaDiv, bodyDiv);
+    dom.catalogGrid.appendChild(card);
+  });
+}
+
+// Pencarian item spesifik dengan Array.prototype.find() untuk Modal Detail
+function openProductModal(productId) {
+  const product = appState.activeDataset.find(item => Number(item.id) === Number(productId));
+  if (!product) return;
+
+  appState.selectedModalProduct = product;
+  dom.modalCategory.textContent = formatCategoryLabel(product.category);
+  dom.modalTitle.textContent = product.title;
+  dom.modalPrice.textContent = formatPriceUSD(product.price);
+  dom.modalDescription.textContent = product.description;
+
+  dom.modalImageContainer.replaceChildren();
+  dom.modalImageContainer.appendChild(createProductVisualElement(product));
+
+  const stockMeta = getStockStatusMeta(product.stock);
+  const specs = [
+    ['Merek / Pembuat', product.brand || 'Kala Seduh'],
+    ['Kode SKU', product.sku || 'KS-' + product.id],
+    ['Status Stok', stockMeta.label],
+    ['Penilaian Produk', (Number(product.rating) || 0).toFixed(2) + ' / 5.00']
+  ];
+
+  dom.modalSpecs.replaceChildren();
+  specs.forEach(([label, val]) => {
+    const wrap = document.createElement('div');
+    const dt = document.createElement('dt');
+    dt.textContent = label;
+    const dd = document.createElement('dd');
+    dd.textContent = val;
+    wrap.append(dt, dd);
+    dom.modalSpecs.appendChild(wrap);
+  });
+
+  if (typeof dom.productModal.showModal === 'function') {
+    dom.productModal.showModal();
+  } else {
+    dom.productModal.setAttribute('open', 'open');
+  }
+}
+
+function closeProductModal() {
+  if (typeof dom.productModal.close === 'function' && dom.productModal.open) {
+    dom.productModal.close();
+  } else {
+    dom.productModal.removeAttribute('open');
+  }
+}
+
+function resetAllFilters() {
+  appState.filters = {
+    searchQuery: '',
+    category: 'ALL',
+    availability: 'ALL',
+    sortBy: 'DEFAULT'
+  };
+  dom.catalogSearchInput.value = '';
+  dom.headerSearchInput.value = '';
+  dom.categoryFilter.value = 'ALL';
+  dom.availabilityFilter.value = 'ALL';
+  dom.sortFilter.value = 'DEFAULT';
+  renderCatalogAndStats();
+}
+
+function activateDataset(dataset, sourceType, contextNotice) {
+  appState.activeSource = sourceType;
+  appState.activeDataset = dataset;
+
+  const isApi = sourceType === 'api';
+  dom.sourceApiBtn.classList.toggle('active', isApi);
+  dom.sourceApiBtn.setAttribute('aria-pressed', String(isApi));
+  dom.sourceCoffeeBtn.classList.toggle('active', !isApi);
+  dom.sourceCoffeeBtn.setAttribute('aria-pressed', String(!isApi));
+
+  dom.collectionContextText.textContent = contextNotice;
+  dom.featuredSourceCaption.textContent = isApi
+    ? 'Menampilkan 3 produk pilihan dengan rating tertinggi dari Katalog Produk API aktif.'
+    : 'Menampilkan 3 produk pilihan dari Koleksi Biji Kopi ([DATA CONTOH] terpisah).';
+
+  populateCategoryAndProductSelects(dataset);
+  resetAllFilters();
+  renderFeaturedSection(dataset);
+}
+
+async function loadApiCatalog(forceErrorSimulation = false) {
+  showLoadingState();
+  const targetUrl = forceErrorSimulation
+    ? API_CONFIG.BrokenEndpointForTest
+    : API_CONFIG.PRIMARY_ENDPOINT;
+
+  try {
+    const products = await fetchProductsFromApi(targetUrl);
+    appState.apiProducts = products;
+    recordSuccessfulSyncTimestamp();
+    activateDataset(
+      products,
+      'api',
+      'Menampilkan ' +
+        products.length +
+        ' produk asli dari endpoint resmi https://dummyjson.com/products tanpa memodifikasi nama, harga, atau kategori.'
+    );
+  } catch (error) {
+    showErrorState(
+      'Katalog belum dapat dimuat dari server (' +
+        error.message +
+        '). Waktu pemuatan terakhir yang berhasil tetap disimpan. Silakan klik "Coba Lagi" atau gunakan salinan cadangan.'
+    );
+  }
+}
+
+function renderSavedInquiries() {
+  const saved = safeGetStorage(API_CONFIG.STORAGE_KEYS.SAVED_INQUIRIES, []);
+  dom.savedInquiriesList.replaceChildren();
+
+  if (!Array.isArray(saved) || saved.length === 0) {
+    const emptyLi = document.createElement('li');
+    emptyLi.className = 'saved-inquiry-empty';
+    emptyLi.textContent = 'Belum ada permintaan informasi yang disimpan.';
+    dom.savedInquiriesList.appendChild(emptyLi);
+    return;
+  }
+
+  saved.forEach(entry => {
+    const li = document.createElement('li');
+    li.className = 'saved-inquiry-item';
+
+    const headerStrong = document.createElement('strong');
+    headerStrong.textContent = entry.name + ' (' + entry.purpose + ')';
+
+    const metaSpan = document.createElement('div');
+    metaSpan.textContent = 'Produk: ' + entry.product + ' | Waktu: ' + entry.createdAt;
+
+    const noteP = document.createElement('div');
+    noteP.textContent = 'Pesan: ' + entry.notes;
+
+    li.append(headerStrong, metaSpan, noteP);
+    dom.savedInquiriesList.appendChild(li);
+  });
+}
+
+function setFieldError(inputEl, errorEl, message) {
+  if (message) {
+    inputEl.setAttribute('aria-invalid', 'true');
+    errorEl.textContent = message;
+    errorEl.classList.remove('hidden');
+  } else {
+    inputEl.removeAttribute('aria-invalid');
+    errorEl.textContent = '';
+    errorEl.classList.add('hidden');
+  }
+}
+
+function clearFormErrors() {
+  setFieldError(dom.inquiryName, dom.inquiryNameError, '');
+  setFieldError(dom.inquiryContact, dom.inquiryContactError, '');
+  setFieldError(dom.inquiryProduct, dom.inquiryProductError, '');
+  setFieldError(dom.inquiryNotes, dom.inquiryNotesError, '');
+}
+
+function bindEvents() {
+  // Toggle menu mobile
+  dom.mobileNavToggle.addEventListener('click', () => {
+    const isOpen = dom.primaryNav.classList.toggle('is-open');
+    dom.mobileNavToggle.setAttribute('aria-expanded', String(isOpen));
+  });
+
+  // Form pencarian cepat pada header
+  dom.headerSearchForm.addEventListener('submit', event => {
+    event.preventDefault();
+    const query = dom.headerSearchInput.value;
+    dom.catalogSearchInput.value = query;
+    appState.filters.searchQuery = query;
+    renderCatalogAndStats();
+    const catalogEl = document.getElementById('katalog');
+    if (catalogEl) {
+      catalogEl.scrollIntoView({ behavior: 'smooth' });
+    }
+  });
+
+  // Sinkronisasi input pencarian katalog & filter kombinasi
+  dom.catalogFilterForm.addEventListener('submit', event => {
+    event.preventDefault();
+  });
+
+  dom.catalogSearchInput.addEventListener('input', event => {
+    const val = event.target.value;
+    dom.headerSearchInput.value = val;
+    appState.filters.searchQuery = val;
+    renderCatalogAndStats();
+  });
+
+  dom.categoryFilter.addEventListener('change', event => {
+    appState.filters.category = event.target.value;
+    renderCatalogAndStats();
+  });
+
+  dom.availabilityFilter.addEventListener('change', event => {
+    appState.filters.availability = event.target.value;
+    renderCatalogAndStats();
+  });
+
+  dom.sortFilter.addEventListener('change', event => {
+    appState.filters.sortBy = event.target.value;
+    renderCatalogAndStats();
+  });
+
+  dom.resetFilterBtn.addEventListener('click', () => {
+    resetAllFilters();
+  });
+
+  dom.emptyResetBtn.addEventListener('click', () => {
+    resetAllFilters();
+  });
+
+  // Pengalih sumber koleksi katalog (Arsitektur Jujur: API Live vs Koleksi Biji Kopi Contoh)
+  dom.sourceApiBtn.addEventListener('click', () => {
+    if (appState.apiProducts.length > 0) {
+      activateDataset(
+        appState.apiProducts,
+        'api',
+        'Menampilkan ' +
+          appState.apiProducts.length +
+          ' produk asli dari endpoint resmi https://dummyjson.com/products tanpa memodifikasi nama, harga, atau kategori.'
+      );
+    } else {
+      loadApiCatalog(false);
+    }
+  });
+
+  dom.sourceCoffeeBtn.addEventListener('click', () => {
+    activateDataset(
+      SAMPLE_COFFEE_COLLECTION,
+      'coffee_sample',
+      'Menampilkan Koleksi Biji Kopi Lokal ([DATA CONTOH] terpisah). Statistik di bawah dihitung murni dari koleksi contoh ini tanpa dicampur dengan data API.'
+    );
+  });
+
+  dom.refreshCatalogBtn.addEventListener('click', () => {
+    loadApiCatalog(false);
+  });
+
+  dom.simulateErrorBtn.addEventListener('click', () => {
+    loadApiCatalog(true);
+  });
+
+  dom.retryFetchBtn.addEventListener('click', () => {
+    loadApiCatalog(false);
+  });
+
+  dom.fallbackSnapshotBtn.addEventListener('click', () => {
+    appState.apiProducts = VERIFIED_API_FALLBACK_PRODUCTS;
+    recordSuccessfulSyncTimestamp();
+    activateDataset(
+      VERIFIED_API_FALLBACK_PRODUCTS,
+      'api',
+      'Menampilkan salinan cadangan terverifikasi dari struktur https://dummyjson.com/products (mode offline).'
+    );
+  });
+
+  // Modal events
+  dom.modalCloseBtn.addEventListener('click', () => {
+    closeProductModal();
+  });
+
+  dom.productModal.addEventListener('click', event => {
+    if (event.target === dom.productModal) {
+      closeProductModal();
+    }
+  });
+
+  dom.modalInquireBtn.addEventListener('click', () => {
+    const selected = appState.selectedModalProduct;
+    closeProductModal();
+    if (selected) {
+      dom.inquiryProduct.value = selected.title;
+      const inquirySection = document.getElementById('konsultasi');
+      if (inquirySection) {
+        inquirySection.scrollIntoView({ behavior: 'smooth' });
+      }
+      dom.inquiryName.focus();
+    }
+  });
+
+  // Validasi dan penyimpanan Form Permintaan Informasi Produk
+  dom.inquiryForm.addEventListener('submit', event => {
+    event.preventDefault();
+    clearFormErrors();
+    dom.inquirySuccessBanner.classList.add('hidden');
+
+    const result = validateInquiryForm({
+      name: dom.inquiryName.value,
+      contact: dom.inquiryContact.value,
+      product: dom.inquiryProduct.value,
+      purpose: dom.inquiryPurpose.value,
+      notes: dom.inquiryNotes.value
+    });
+
+    if (!result.isValid) {
+      setFieldError(dom.inquiryName, dom.inquiryNameError, result.errors.name);
+      setFieldError(dom.inquiryContact, dom.inquiryContactError, result.errors.contact);
+      setFieldError(dom.inquiryProduct, dom.inquiryProductError, result.errors.product);
+      setFieldError(dom.inquiryNotes, dom.inquiryNotesError, result.errors.notes);
+      return;
+    }
+
+    const newRecord = {
+      ...result.cleaned,
+      createdAt: new Date().toLocaleString('id-ID', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    };
+
+    const existing = safeGetStorage(API_CONFIG.STORAGE_KEYS.SAVED_INQUIRIES, []);
+    const updated = [newRecord, ...(Array.isArray(existing) ? existing : [])].slice(0, 10);
+    safeSetStorage(API_CONFIG.STORAGE_KEYS.SAVED_INQUIRIES, updated);
+    renderSavedInquiries();
+
+    dom.inquirySuccessBody.textContent =
+      'Terima kasih, ' +
+      result.cleaned.name +
+      '. Permintaan informasi untuk "' +
+      result.cleaned.product +
+      '" telah dicatat pada penyimpanan lokal perangkat ini (website etalase ini berjalan tanpa server pengiriman pesan belakang).';
+    dom.inquirySuccessBanner.classList.remove('hidden');
+    dom.inquiryForm.reset();
+  });
+
+  dom.resetInquiryBtn.addEventListener('click', () => {
+    clearFormErrors();
+    dom.inquirySuccessBanner.classList.add('hidden');
+  });
+
+  dom.clearInquiriesBtn.addEventListener('click', () => {
+    safeSetStorage(API_CONFIG.STORAGE_KEYS.SAVED_INQUIRIES, []);
+    renderSavedInquiries();
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  cacheDomElements();
+  updateTimestampDisplay();
+  renderSavedInquiries();
+  bindEvents();
+  loadApiCatalog(false);
+});
