@@ -1,4 +1,4 @@
-# Kala Seduh Roastery & Pantry - Etalase Digital Produk & Kebutuhan Seduh
+# Ranum Kopi Nusantara - Etalase Digital Produk & Kebutuhan Seduh
 
 Dokumentasi resmi proyek Penilaian Tengah Semester (PTS) Mata Kuliah **Pemrograman Web (26TJ453127)** Program Studi Teknik Komputer, Fakultas Teknik, Universitas Borneo Tarakan.
 
@@ -15,14 +15,14 @@ Dokumentasi resmi proyek Penilaian Tengah Semester (PTS) Mata Kuliah **Pemrogram
 
 ## 2. Nama Aplikasi dan Deskripsi Singkat
 
-**Kala Seduh Roastery & Pantry** adalah aplikasi web etalase digital (*front-end storefront*) berbasis HTML5, CSS3, dan Vanilla JavaScript yang dirancang dengan gaya editorial minimalis hangat (*warm cream*, *espresso brown*, dan *deep forest green*). Aplikasi ini memungkinkan pengunjung menjelajahi produk dari REST API secara interaktif, menyaring produk berdasarkan kata kunci, kategori, dan status stok secara bersamaan, melihat ringkasan statistik katalog secara *real-time*, membaca rincian spesifikasi produk pada modal yang aksesibel, serta mencatat permintaan informasi produk dengan validasi *client-side* dan penyimpanan `localStorage`.
+**Ranum Kopi Nusantara** adalah aplikasi web etalase digital (*front-end storefront*) berbasis HTML5, CSS3, dan Vanilla JavaScript yang dirancang dengan gaya editorial minimalis hangat (*warm cream*, *espresso brown*, dan *deep forest green*). Aplikasi ini memungkinkan pengunjung menjelajahi produk dari REST API secara interaktif, menyaring produk berdasarkan kata kunci, kategori, dan status stok secara bersamaan, melihat ringkasan statistik katalog secara *real-time*, membaca rincian spesifikasi produk pada modal yang aksesibel, serta mencatat permintaan informasi produk dengan validasi *client-side* dan penyimpanan `localStorage`.
 
 ## 3. Perhitungan Variasi Soal Berdasarkan NIM (`2440304010`)
 
 Tiga digit terakhir dari NIM **2440304010** adalah **010**:
 - **Digit X = 0**
   - **Dataset Wajib**: `Products` (`https://dummyjson.com/products`)
-  - **Tema Project**: Dashboard Produk / UMKM (diwujudkan sebagai Etalase Digital Brand Lokal *Kala Seduh*)
+  - **Tema Project**: Dashboard Produk / UMKM (diwujudkan sebagai Etalase Digital Brand Lokal *Ranum*)
 - **Digit Y = 1**
   - **Fitur Utama Wajib**: Filter data + statistik sederhana (pencarian kata kunci, filter kategori, filter ketersediaan stok, pengurutan, tombol atur ulang filter, serta kalkulasi dinamis jumlah produk, rata-rata harga, produk harga tertinggi, dan jumlah kategori)
 - **Digit Z = 0**
@@ -46,7 +46,7 @@ Tiga digit terakhir dari NIM **2440304010** adalah **010**:
 2. **Filter Kombinasi & Pencarian (`Y = 1`)**: Menyaring produk secara simultan berdasarkan kata kunci pencarian (judul, deskripsi, kategori), pilihan kategori dinamis, status ketersediaan stok (*Tersedia > 10*, *Stok Terbatas 1-10*, *Stok Habis 0*), serta pengurutan harga/nama dan tombol **Atur Ulang Filter**.
 3. **Ringkasan Katalog Dinamis (`Y = 1`)**: Menghitung secara *real-time* menggunakan `reduce()`, `filter()`, dan `map()` empat metrik utama: Jumlah Produk Tampil, Rata-rata Harga, Produk Harga Tertinggi, dan Jumlah Kategori, lengkap dengan penanda cakupan (*Seluruh Katalog Aktif* vs *Hasil Penyaringan Aktif*).
 4. **Form Permintaan Informasi Produk (`Z = 0`)**: Validasi *client-side* yang memastikan nama lengkap minimal 5 karakter setelah `.trim()`, format email/nomor telepon valid, produk dipilih, dan catatan minimal 10 karakter. Data yang valid disimpan ke `localStorage` dan ditampilkan pada daftar riwayat di halaman.
-5. **Loading, Error State, Tombol Coba Lagi & Timestamp (`C = 1`)**: Menampilkan indikator pemuatan saat request berlangsung, menampilkan panel pesan kendala dengan tombol **Coba Lagi** saat gagal, serta menyimpan waktu keberhasilan sinkronisasi terakhir di `localStorage` (`kala_seduh_last_sync_timestamp`) sehingga waktu keberhasilan sebelumnya tetap terlihat meskipun percobaan berikutnya gagal.
+5. **Loading, Error State, Tombol Coba Lagi & Timestamp (`C = 1`)**: Menampilkan indikator pemuatan saat request berlangsung, menampilkan panel pesan kendala dengan tombol **Coba Lagi** saat gagal, serta menyimpan waktu keberhasilan sinkronisasi terakhir di `localStorage` (`ranum_last_sync_timestamp`) sehingga waktu keberhasilan sebelumnya tetap terlihat meskipun percobaan berikutnya gagal.
 
 ## 6. Cara Menjalankan Project
 
@@ -110,8 +110,8 @@ Ketika formulir `#product-inquiry-form` dikirim (event `submit`), `event.prevent
 
 ### 7. Penggunaan `localStorage` pada project
 Project ini menggunakan `localStorage` pada dua skenario utama melalui pembungkus aman `safeGetStorage()` dan `safeSetStorage()`:
-1. **Waktu Terakhir Sinkronisasi Katalog (`kala_seduh_last_sync_timestamp`)**: Disimpan di dalam `recordSuccessfulSyncTimestamp()` setiap kali `fetchProductsFromApi()` berhasil memuat data, dan dibaca oleh `updateTimestampDisplay()` saat halaman pertama kali dibuka maupun saat terjadi error. Alasan penggunaannya adalah untuk memenuhi kebutuhan Challenge `C = 1`, yaitu mempertahankan informasi waktu pemuatan terakhir yang berhasil meskipun pemuatan berikutnya gagal atau halaman dimuat ulang.
-2. **Riwayat Permintaan Informasi Produk (`kala_seduh_saved_inquiries_v1`)**: Disimpan saat formulir `#product-inquiry-form` lolos validasi dan dibaca oleh `renderSavedInquiries()` saat halaman dibuka. Alasan penggunaannya adalah agar pelanggan tetap dapat melihat catatan permintaannya pada perangkat yang sama meskipun aplikasi berjalan tanpa backend server.
+1. **Waktu Terakhir Sinkronisasi Katalog (`ranum_last_sync_timestamp`)**: Disimpan di dalam `recordSuccessfulSyncTimestamp()` setiap kali `fetchProductsFromApi()` berhasil memuat data, dan dibaca oleh `updateTimestampDisplay()` saat halaman pertama kali dibuka maupun saat terjadi error. Alasan penggunaannya adalah untuk memenuhi kebutuhan Challenge `C = 1`, yaitu mempertahankan informasi waktu pemuatan terakhir yang berhasil meskipun pemuatan berikutnya gagal atau halaman dimuat ulang.
+2. **Riwayat Permintaan Informasi Produk (`ranum_saved_inquiries_v1`)**: Disimpan saat formulir `#product-inquiry-form` lolos validasi dan dibaca oleh `renderSavedInquiries()` saat halaman dibuka. Alasan penggunaannya adalah agar pelanggan tetap dapat melihat catatan permintaannya pada perangkat yang sama meskipun aplikasi berjalan tanpa backend server.
 
 ### 8. Potongan satu fungsi JavaScript penting (Maksimal 15 baris: Input - Proses - Output)
 Berikut adalah potongan fungsi `computeCatalogStatistics()` pada `app.js`:

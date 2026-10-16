@@ -3,13 +3,196 @@ const API_CONFIG = {
   PRIMARY_ENDPOINT: 'https://dummyjson.com/products',
   BrokenEndpointForTest: 'https://dummyjson.com/products-invalid-endpoint-404',
   STORAGE_KEYS: {
-    LAST_SUCCESS_SYNC: 'kala_seduh_last_sync_timestamp',
-    SAVED_INQUIRIES: 'kala_seduh_saved_inquiries_v1'
+    LAST_SUCCESS_SYNC: 'ranum_last_sync_timestamp',
+    SAVED_INQUIRIES: 'ranum_saved_inquiries_v1'
   }
 };
 
+// Katalog Utama UMKM Ranum: 12 Varian Biji Kopi (Beans) dari Berbagai Daerah Nusantara
+const NUSANTARA_BEANS_CATALOG = [
+  {
+    id: 101,
+    title: 'Arabika Aceh Gayo Takengon 250g',
+    description: 'Biji kopi dataran tinggi Gayo dengan karakter bersih, tekstur lembut, dan nyaman untuk seduhan V60 maupun tubruk pagi hari.',
+    category: 'arabika-sumatera',
+    price: 95000,
+    rating: 4.94,
+    stock: 28,
+    brand: 'Ranum Roastery',
+    sku: 'RNM-SUM-01',
+    originRegion: 'Aceh Tengah, Sumatera',
+    roastLevel: 'Medium (Filter & Manual Brew)',
+    isNusantaraBean: true,
+    accentHex: '#1E3F2B'
+  },
+  {
+    id: 102,
+    title: 'Arabika Mandheling Tapanuli 250g',
+    description: 'Biji kopi asal Tapanuli Selatan dengan kekentalan mantap dan tingkat keasaman rendah, cocok untuk penikmat kopi pekat.',
+    category: 'arabika-sumatera',
+    price: 98000,
+    rating: 4.88,
+    stock: 19,
+    brand: 'Ranum Roastery',
+    sku: 'RNM-SUM-02',
+    originRegion: 'Tapanuli Selatan, Sumatera Utara',
+    roastLevel: 'Medium-Dark (Tubruk & Espresso)',
+    isNusantaraBean: true,
+    accentHex: '#3A2618'
+  },
+  {
+    id: 103,
+    title: 'Arabika Lintong Nihuta 250g',
+    description: 'Biji kopi dari tepian Danau Toba Kabupaten Humbang Hasundutan dengan aroma rempah hangat yang seimbang.',
+    category: 'arabika-sumatera',
+    price: 92000,
+    rating: 4.83,
+    stock: 8,
+    brand: 'Ranum Roastery',
+    sku: 'RNM-SUM-03',
+    originRegion: 'Humbang Hasundutan, Sumatera Utara',
+    roastLevel: 'Medium (Pour Over & AeroPress)',
+    isNusantaraBean: true,
+    accentHex: '#2C4C38'
+  },
+  {
+    id: 104,
+    title: 'Arabika Kintamani Bali 250g',
+    description: 'Ditanam berdampingan dengan kebun jeruk di lereng Gunung Batur, menghasilkan seduhan segar untuk V60 atau Japanese Iced Coffee.',
+    category: 'arabika-jawa-bali',
+    price: 90000,
+    rating: 4.91,
+    stock: 24,
+    brand: 'Ranum Roastery',
+    sku: 'RNM-JWB-01',
+    originRegion: 'Bangli, Bali',
+    roastLevel: 'Light-Medium (V60 & Japanese Iced)',
+    isNusantaraBean: true,
+    accentHex: '#1E3F2B'
+  },
+  {
+    id: 105,
+    title: 'Arabika Java Preanger Malabar 250g',
+    description: 'Kopi pegunungan Jawa Barat dengan karakter manis alami yang halus dan nyaman diminum sepanjang hari.',
+    category: 'arabika-jawa-bali',
+    price: 96000,
+    rating: 4.86,
+    stock: 15,
+    brand: 'Ranum Roastery',
+    sku: 'RNM-JWB-02',
+    originRegion: 'Pangalengan, Jawa Barat',
+    roastLevel: 'Medium (Filter & French Press)',
+    isNusantaraBean: true,
+    accentHex: '#4A3322'
+  },
+  {
+    id: 106,
+    title: 'Arabika Ijen Raung Bondowoso 250g',
+    description: 'Biji kopi dari lereng Gunung Ijen Jawa Timur dengan profil rasa seimbang antara manis gula merah dan kesegaran ringan.',
+    category: 'arabika-jawa-bali',
+    price: 88000,
+    rating: 4.79,
+    stock: 6,
+    brand: 'Ranum Roastery',
+    sku: 'RNM-JWB-03',
+    originRegion: 'Bondowoso, Jawa Timur',
+    roastLevel: 'Medium (Manual Brew & Drip)',
+    isNusantaraBean: true,
+    accentHex: '#2C4C38'
+  },
+  {
+    id: 107,
+    title: 'Arabika Toraja Sapan 250g',
+    description: 'Biji kopi dari dataran tinggi Sapan Sulawesi Selatan dengan tekstur seduhan yang bersih dan akhir rasa yang panjang.',
+    category: 'arabika-sulawesi-timur',
+    price: 108000,
+    rating: 4.95,
+    stock: 14,
+    brand: 'Ranum Roastery',
+    sku: 'RNM-TIM-01',
+    originRegion: 'Toraja Utara, Sulawesi Selatan',
+    roastLevel: 'Medium (Pour Over & Moka Pot)',
+    isNusantaraBean: true,
+    accentHex: '#1E3F2B'
+  },
+  {
+    id: 108,
+    title: 'Arabika Flores Bajawa Ngada 250g',
+    description: 'Biji kopi asal dataran tinggi Ngada Nusa Tenggara Timur dengan karakter coklat pekat yang pas untuk moka pot maupun filter.',
+    category: 'arabika-sulawesi-timur',
+    price: 94000,
+    rating: 4.87,
+    stock: 5,
+    brand: 'Ranum Roastery',
+    sku: 'RNM-TIM-02',
+    originRegion: 'Ngada, Flores, NTT',
+    roastLevel: 'Medium-Dark (Moka Pot & Tubruk)',
+    isNusantaraBean: true,
+    accentHex: '#3A2618'
+  },
+  {
+    id: 109,
+    title: 'Arabika Papua Wamena Lembah Baliem 250g',
+    description: 'Biji kopi dari pegunungan Jayawijaya Lembah Baliem dengan profil seduhan yang lembut dan aroma hangat.',
+    category: 'arabika-sulawesi-timur',
+    price: 115000,
+    rating: 4.92,
+    stock: 0,
+    brand: 'Ranum Roastery',
+    sku: 'RNM-TIM-03',
+    originRegion: 'Jayawijaya, Papua Pegunungan',
+    roastLevel: 'Medium (V60 & AeroPress)',
+    isNusantaraBean: true,
+    accentHex: '#1E3F2B'
+  },
+  {
+    id: 110,
+    title: 'Robusta Temanggung Pilihan 500g',
+    description: 'Biji kopi Robusta petik merah dari lereng Sindoro-Sumbing, menghasilkan krema tebal untuk kopi susu maupun kopi tubruk.',
+    category: 'robusta-dan-blend',
+    price: 85000,
+    rating: 4.81,
+    stock: 32,
+    brand: 'Ranum Roastery',
+    sku: 'RNM-RBS-01',
+    originRegion: 'Temanggung, Jawa Tengah',
+    roastLevel: 'Medium-Dark (Kopi Susu & Vietnam Drip)',
+    isNusantaraBean: true,
+    accentHex: '#5C4332'
+  },
+  {
+    id: 111,
+    title: 'Robusta Lampung Barat 500g',
+    description: 'Biji kopi Robusta klasik asal Lampung Barat dengan karakter mantap untuk bahan dasar es kopi susu gula aren di rumah.',
+    category: 'robusta-dan-blend',
+    price: 78000,
+    rating: 4.76,
+    stock: 22,
+    brand: 'Ranum Roastery',
+    sku: 'RNM-RBS-02',
+    originRegion: 'Lampung Barat, Sumatera',
+    roastLevel: 'Dark (Espresso & Kopi Susu)',
+    isNusantaraBean: true,
+    accentHex: '#3A2618'
+  },
+  {
+    id: 112,
+    title: 'Racikan Rumah Ranum Nusantara 500g',
+    description: 'Perpaduan seimbang 70% Arabika Gayo dan 30% Robusta Temanggung khusus untuk ekstraksi mesin espresso rumahan maupun kedai.',
+    category: 'robusta-dan-blend',
+    price: 135000,
+    rating: 4.96,
+    stock: 9,
+    brand: 'Ranum Roastery',
+    sku: 'RNM-BLD-01',
+    originRegion: 'Paduan Aceh Gayo & Temanggung',
+    roastLevel: 'Medium-Dark (House Blend Espresso)',
+    isNusantaraBean: true,
+    accentHex: '#1E3F2B'
+  }
+];
+
 // Salinan cadangan terverifikasi dari struktur asli https://dummyjson.com/products
-// Digunakan hanya apabila pengguna menekan tombol "Gunakan Salinan Cadangan API" saat jaringan terputus
 const VERIFIED_API_FALLBACK_PRODUCTS = [
   {
     id: 1,
@@ -21,8 +204,7 @@ const VERIFIED_API_FALLBACK_PRODUCTS = [
     stock: 5,
     brand: 'Essence',
     sku: 'RCH45Q1A',
-    availabilityStatus: 'Low Stock',
-    ShippingInfo: 'Ships in 1 month'
+    availabilityStatus: 'Low Stock'
   },
   {
     id: 6,
@@ -34,8 +216,7 @@ const VERIFIED_API_FALLBACK_PRODUCTS = [
     stock: 17,
     brand: 'Calvin Klein',
     sku: 'DZM2JQZE',
-    availabilityStatus: 'In Stock',
-    ShippingInfo: 'Ships overnight'
+    availabilityStatus: 'In Stock'
   },
   {
     id: 11,
@@ -47,8 +228,7 @@ const VERIFIED_API_FALLBACK_PRODUCTS = [
     stock: 47,
     brand: 'Annibale Colombo',
     sku: '4KMDTZWF',
-    availabilityStatus: 'In Stock',
-    ShippingInfo: 'Ships in 1 month'
+    availabilityStatus: 'In Stock'
   },
   {
     id: 16,
@@ -60,8 +240,7 @@ const VERIFIED_API_FALLBACK_PRODUCTS = [
     stock: 9,
     brand: 'Fresh Farm',
     sku: 'QTROUV79',
-    availabilityStatus: 'Low Stock',
-    ShippingInfo: 'Ships in 2 weeks'
+    availabilityStatus: 'Low Stock'
   },
   {
     id: 20,
@@ -73,8 +252,7 @@ const VERIFIED_API_FALLBACK_PRODUCTS = [
     stock: 10,
     brand: 'Pantry Essentials',
     sku: 'B6F79V52',
-    availabilityStatus: 'Low Stock',
-    ShippingInfo: 'Ships in 1 week'
+    availabilityStatus: 'Low Stock'
   },
   {
     id: 27,
@@ -86,8 +264,7 @@ const VERIFIED_API_FALLBACK_PRODUCTS = [
     stock: 25,
     brand: 'Nature Hive',
     sku: '46M5O9G6',
-    availabilityStatus: 'In Stock',
-    ShippingInfo: 'Ships in 1 week'
+    availabilityStatus: 'In Stock'
   },
   {
     id: 29,
@@ -99,8 +276,7 @@ const VERIFIED_API_FALLBACK_PRODUCTS = [
     stock: 50,
     brand: 'Orchard Press',
     sku: '9W8E1K32',
-    availabilityStatus: 'In Stock',
-    ShippingInfo: 'Ships in 3-5 business days'
+    availabilityStatus: 'In Stock'
   },
   {
     id: 30,
@@ -112,98 +288,15 @@ const VERIFIED_API_FALLBACK_PRODUCTS = [
     stock: 0,
     brand: 'Green Orchard',
     sku: '0X1K9P44',
-    availabilityStatus: 'Out of Stock',
-    ShippingInfo: 'Ships in 1 week'
-  }
-];
-
-// Modul Koleksi Contoh Biji Kopi Lokal (Terpisah secara arsitektur & berlabel jujur [DATA CONTOH])
-const SAMPLE_COFFEE_COLLECTION = [
-  {
-    id: 901,
-    title: '[DATA CONTOH] Arabika Gayo Dataran Tinggi 250g',
-    description: 'Contoh produk etalase untuk simulasi katalog biji kopi lokal kategori seduh manual (Filter Roast).',
-    category: 'single-origin-filter',
-    price: 8.50,
-    rating: 4.90,
-    stock: 24,
-    brand: 'Kala Seduh [Contoh]',
-    sku: 'KS-SMP-01',
-    availabilityStatus: 'In Stock',
-    isSamplePlaceholder: true
-  },
-  {
-    id: 902,
-    title: '[DATA CONTOH] Arabika Kintamani Bali 250g',
-    description: 'Contoh produk etalase untuk simulasi katalog biji kopi lokal dengan profil sangrai medium.',
-    category: 'single-origin-filter',
-    price: 8.20,
-    rating: 4.82,
-    stock: 18,
-    brand: 'Kala Seduh [Contoh]',
-    sku: 'KS-SMP-02',
-    availabilityStatus: 'In Stock',
-    isSamplePlaceholder: true
-  },
-  {
-    id: 903,
-    title: '[DATA CONTOH] Racikan Espresso Rumah Teduh 500g',
-    description: 'Contoh produk etalase untuk simulasi campuran biji kopi lokal khusus mesin espresso rumahan.',
-    category: 'espresso-blend',
-    price: 14.00,
-    rating: 4.88,
-    stock: 7,
-    brand: 'Kala Seduh [Contoh]',
-    sku: 'KS-SMP-03',
-    availabilityStatus: 'Low Stock',
-    isSamplePlaceholder: true
-  },
-  {
-    id: 904,
-    title: '[DATA CONTOH] Robusta Temanggung Fine 500g',
-    description: 'Contoh produk etalase untuk simulasi kopi tubruk dan kopi susu harian dengan body tebal.',
-    category: 'robusta-lokal',
-    price: 9.50,
-    rating: 4.65,
-    stock: 32,
-    brand: 'Kala Seduh [Contoh]',
-    sku: 'KS-SMP-04',
-    availabilityStatus: 'In Stock',
-    isSamplePlaceholder: true
-  },
-  {
-    id: 905,
-    title: '[DATA CONTOH] Arabika Flores Bajawa 250g',
-    description: 'Contoh produk etalase untuk simulasi biji kopi sangrai medium-dark.',
-    category: 'single-origin-filter',
-    price: 8.90,
-    rating: 4.79,
-    stock: 4,
-    brand: 'Kala Seduh [Contoh]',
-    sku: 'KS-SMP-05',
-    availabilityStatus: 'Low Stock',
-    isSamplePlaceholder: true
-  },
-  {
-    id: 906,
-    title: '[DATA CONTOH] Paket Kertas Saring V60 02 (100 Lembar)',
-    description: 'Contoh produk perlengkapan seduh manual untuk melengkapi simulasi etalase toko kopi.',
-    category: 'perlengkapan-seduh',
-    price: 5.25,
-    rating: 4.70,
-    stock: 0,
-    brand: 'Kala Seduh [Contoh]',
-    sku: 'KS-SMP-06',
-    availabilityStatus: 'Out of Stock',
-    isSamplePlaceholder: true
+    availabilityStatus: 'Out of Stock'
   }
 ];
 
 // State terpusat aplikasi
 const appState = {
-  activeSource: 'api', // 'api' | 'coffee_sample'
+  activeSource: 'coffee_nusantara', // 'coffee_nusantara' | 'api'
   apiProducts: [],
-  activeDataset: [],
+  activeDataset: NUSANTARA_BEANS_CATALOG,
   filteredProducts: [],
   filters: {
     searchQuery: '',
@@ -211,7 +304,6 @@ const appState = {
     availability: 'ALL',
     sortBy: 'DEFAULT'
   },
-  isSimulatingError: false,
   selectedModalProduct: null
 };
 
@@ -254,31 +346,54 @@ async function fetchProductsFromApi(customUrl = API_CONFIG.PRIMARY_ENDPOINT) {
   return payload.products;
 }
 
-// Pembuatan ilustrasi SVG konsisten dengan rasio 4:3 untuk item tanpa gambar eksternal
-function createPackagingSvgDataUri(title, category, isSample) {
-  const safeTitle = String(title).replace(/\[DATA CONTOH\]\s*/i, '').slice(0, 26);
-  const safeCat = String(category).toUpperCase().slice(0, 22);
-  const badgeText = isSample ? '[DATA CONTOH]' : 'KATALOG PRODUK';
+// Pembuatan ilustrasi SVG kemasan kopi Ranum proporsi 4:3 yang konsisten
+function createPackagingSvgDataUri(product) {
+  const rawTitle = String(product.title || 'Beans Nusantara').replace(/^Arabika\s+/i, '').replace(/\s+\d+g$/i, '');
+  const safeTitle = rawTitle.slice(0, 22).toUpperCase();
+  const regionText = String(product.originRegion || formatCategoryLabel(product.category)).slice(0, 28);
+  const roastText = String(product.roastLevel || 'RANUM ROASTERY').slice(0, 28);
+  const labelColor = product.accentHex || '#1E3F2B';
+  const weightMatch = String(product.title || '').match(/(\d+g)/i);
+  const weightBadge = weightMatch ? weightMatch[1].toUpperCase() : '250G';
+
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
     <rect width="400" height="300" fill="#EFE9DC"/>
-    <rect x="110" y="28" width="180" height="244" rx="6" fill="#FBF9F5" stroke="#231710" stroke-width="2.5"/>
-    <rect x="126" y="64" width="148" height="156" fill="#1E3F2B"/>
-    <text x="200" y="96" text-anchor="middle" fill="#E3DAC8" font-family="Georgia, serif" font-size="11" letter-spacing="1">${badgeText}</text>
-    <text x="200" y="132" text-anchor="middle" fill="#FFFFFF" font-family="Georgia, serif" font-size="14" font-weight="bold">${safeTitle}</text>
-    <line x1="150" y1="152" x2="250" y2="152" stroke="#E3DAC8" stroke-width="1"/>
-    <text x="200" y="178" text-anchor="middle" fill="#F7F3EB" font-family="sans-serif" font-size="11">${safeCat}</text>
-    <text x="200" y="204" text-anchor="middle" fill="#E3DAC8" font-family="sans-serif" font-size="10">KALA SEDUH</text>
+    <circle cx="315" cy="76" r="46" fill="#E3DAC8"/>
+    <rect x="36" y="252" width="328" height="28" fill="#DFD5C0"/>
+    <path d="M114 26 H286 L298 264 H102 Z" fill="#FBF9F5" stroke="#231710" stroke-width="2.5"/>
+    <path d="M114 26 H286 L278 54 H122 Z" fill="#DFD5C0" stroke="#231710" stroke-width="2.5"/>
+    <rect x="128" y="72" width="144" height="156" fill="${labelColor}"/>
+    <rect x="136" y="80" width="128" height="140" fill="none" stroke="#F7F3EB" stroke-width="1" opacity="0.55"/>
+    <text x="200" y="104" text-anchor="middle" fill="#E3DAC8" font-family="Georgia, serif" font-size="10" letter-spacing="2">RANUM KOPI</text>
+    <text x="200" y="132" text-anchor="middle" fill="#FFFFFF" font-family="Georgia, serif" font-size="13.5" font-weight="bold">${safeTitle}</text>
+    <line x1="154" y1="146" x2="246" y2="146" stroke="#E3DAC8" stroke-width="1"/>
+    <text x="200" y="166" text-anchor="middle" fill="#F7F3EB" font-family="sans-serif" font-size="9.5">${regionText}</text>
+    <text x="200" y="186" text-anchor="middle" fill="#E3DAC8" font-family="sans-serif" font-size="8.5">${roastText}</text>
+    <text x="200" y="208" text-anchor="middle" fill="#FFFFFF" font-family="sans-serif" font-size="9.5" font-weight="bold">BIJI KOPI ${weightBadge}</text>
   </svg>`;
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
 }
 
-function formatPriceUSD(value) {
+function formatPriceBySource(value, isNusantara = appState.activeSource === 'coffee_nusantara') {
   const num = Number(value) || 0;
+  if (isNusantara || num >= 1000) {
+    return 'Rp' + Math.round(num).toLocaleString('id-ID');
+  }
   return '$' + num.toFixed(2);
 }
 
+const CATEGORY_DISPLAY_NAMES = {
+  'arabika-sumatera': 'Arabika Sumatera',
+  'arabika-jawa-bali': 'Arabika Jawa & Bali',
+  'arabika-sulawesi-timur': 'Arabika Sulawesi & Timur',
+  'robusta-dan-blend': 'Robusta & House Blend'
+};
+
 function formatCategoryLabel(slug) {
   if (!slug) return 'Umum';
+  if (CATEGORY_DISPLAY_NAMES[slug]) {
+    return CATEGORY_DISPLAY_NAMES[slug];
+  }
   return String(slug)
     .split('-')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -304,7 +419,9 @@ function computeFilteredProducts(dataset, filters) {
     const titleMatch = String(item.title || '').toLowerCase().includes(query);
     const descMatch = String(item.description || '').toLowerCase().includes(query);
     const categoryMatch = String(item.category || '').toLowerCase().includes(query);
-    const matchesQuery = !query || titleMatch || descMatch || categoryMatch;
+    const regionMatch = String(item.originRegion || '').toLowerCase().includes(query);
+    const roastMatch = String(item.roastLevel || '').toLowerCase().includes(query);
+    const matchesQuery = !query || titleMatch || descMatch || categoryMatch || regionMatch || roastMatch;
 
     const matchesCategory =
       filters.category === 'ALL' || item.category === filters.category;
@@ -332,11 +449,12 @@ function computeFilteredProducts(dataset, filters) {
 function computeCatalogStatistics(filteredItems, totalDataset) {
   const count = filteredItems.length;
   const totalCount = totalDataset.length;
+  const isNusantara = appState.activeSource === 'coffee_nusantara';
 
   if (count === 0) {
     return {
       countText: '0 dari ' + totalCount + ' produk',
-      averagePriceText: '$0.00',
+      averagePriceText: isNusantara ? 'Rp0' : '$0.00',
       highestProductText: 'Tidak ada produk tampil',
       categoryCountText: '0 kategori'
     };
@@ -353,8 +471,9 @@ function computeCatalogStatistics(filteredItems, totalDataset) {
 
   return {
     countText: count + ' dari ' + totalCount + ' produk',
-    averagePriceText: formatPriceUSD(averagePrice),
-    highestProductText: highestItem.title + ' (' + formatPriceUSD(highestItem.price) + ')',
+    averagePriceText: formatPriceBySource(averagePrice, isNusantara),
+    highestProductText:
+      highestItem.title + ' (' + formatPriceBySource(highestItem.price, isNusantara) + ')',
     categoryCountText: uniqueCategories.size + ' kategori'
   };
 }
@@ -381,11 +500,11 @@ function validateInquiryForm(values) {
   }
 
   if (!selectedProduct) {
-    errors.product = 'Silakan pilih salah satu produk dari daftar katalog.';
+    errors.product = 'Silakan pilih salah satu varian beans atau produk dari daftar katalog.';
   }
 
   if (trimmedNotes.length < 10) {
-    errors.notes = 'Tuliskan rincian pertanyaan minimal 10 karakter agar kebutuhan Anda jelas.';
+    errors.notes = 'Tuliskan rincian pertanyaan minimal 10 karakter agar kebutuhan seduhan Anda jelas.';
   }
 
   return {
@@ -519,15 +638,11 @@ function showErrorState(friendlyMessage) {
 
 function createProductVisualElement(product) {
   const img = document.createElement('img');
-  img.alt = 'Foto produk ' + product.title;
+  img.alt = 'Kemasan produk ' + product.title;
   img.loading = 'lazy';
-  const fallbackUri = createPackagingSvgDataUri(
-    product.title,
-    product.category,
-    Boolean(product.isSamplePlaceholder)
-  );
+  const fallbackUri = createPackagingSvgDataUri(product);
 
-  if (product.thumbnail && !product.isSamplePlaceholder) {
+  if (product.thumbnail && !product.isNusantaraBean) {
     img.src = product.thumbnail;
     img.addEventListener('error', () => {
       img.src = fallbackUri;
@@ -542,12 +657,12 @@ function renderFeaturedSection(dataset) {
   dom.featuredGrid.replaceChildren();
   if (!dataset || dataset.length === 0) {
     const emptyNote = document.createElement('p');
-    emptyNote.textContent = 'Produk unggulan akan tampil setelah katalog selesai dimuat.';
+    emptyNote.textContent = 'Pilihan beans unggulan akan tampil setelah katalog selesai dimuat.';
     dom.featuredGrid.appendChild(emptyNote);
     return;
   }
 
-  // Ambil 3 produk dengan rating tertinggi menggunakan sort()
+  const isNusantara = appState.activeSource === 'coffee_nusantara';
   const topThree = [...dataset]
     .sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0))
     .slice(0, 3);
@@ -592,12 +707,12 @@ function renderFeaturedSection(dataset) {
 
     const priceEl = document.createElement('span');
     priceEl.className = 'product-price';
-    priceEl.textContent = formatPriceUSD(primaryItem.price);
+    priceEl.textContent = formatPriceBySource(primaryItem.price, isNusantara);
 
     const detailBtn = document.createElement('button');
     detailBtn.type = 'button';
     detailBtn.className = 'btn btn-primary';
-    detailBtn.textContent = 'Lihat Rincian';
+    detailBtn.textContent = 'Lihat Rincian Beans';
     detailBtn.addEventListener('click', () => openProductModal(primaryItem.id));
 
     footerDiv.append(priceEl, detailBtn);
@@ -641,7 +756,7 @@ function renderFeaturedSection(dataset) {
 
       const priceEl = document.createElement('span');
       priceEl.className = 'product-price';
-      priceEl.textContent = formatPriceUSD(item.price);
+      priceEl.textContent = formatPriceBySource(item.price, isNusantara);
 
       const detailBtn = document.createElement('button');
       detailBtn.type = 'button';
@@ -659,7 +774,8 @@ function renderFeaturedSection(dataset) {
 }
 
 function populateCategoryAndProductSelects(dataset) {
-  const categories = Array.from(new Set(dataset.map(item => item.category))).sort();
+  const isNusantara = appState.activeSource === 'coffee_nusantara';
+  const categories = Array.from(new Set(dataset.map(item => item.category)));
 
   dom.categoryFilter.replaceChildren();
   const allOption = document.createElement('option');
@@ -674,18 +790,17 @@ function populateCategoryAndProductSelects(dataset) {
     dom.categoryFilter.appendChild(opt);
   });
 
-  // Isi juga pilihan produk pada form permintaan informasi
   const currentSelected = dom.inquiryProduct.value;
   dom.inquiryProduct.replaceChildren();
   const placeholderOpt = document.createElement('option');
   placeholderOpt.value = '';
-  placeholderOpt.textContent = 'Pilih produk dari katalog...';
+  placeholderOpt.textContent = 'Pilih varian beans / produk dari katalog...';
   dom.inquiryProduct.appendChild(placeholderOpt);
 
   dataset.forEach(item => {
     const opt = document.createElement('option');
     opt.value = item.title;
-    opt.textContent = item.title + ' (' + formatPriceUSD(item.price) + ')';
+    opt.textContent = item.title + ' (' + formatPriceBySource(item.price, isNusantara) + ')';
     dom.inquiryProduct.appendChild(opt);
   });
 
@@ -696,6 +811,7 @@ function populateCategoryAndProductSelects(dataset) {
 
 function renderCatalogAndStats() {
   const dataset = appState.activeDataset;
+  const isNusantara = appState.activeSource === 'coffee_nusantara';
   const filtered = computeFilteredProducts(dataset, appState.filters);
   appState.filteredProducts = filtered;
 
@@ -765,7 +881,7 @@ function renderCatalogAndStats() {
 
     const priceEl = document.createElement('span');
     priceEl.className = 'product-price';
-    priceEl.textContent = formatPriceUSD(product.price);
+    priceEl.textContent = formatPriceBySource(product.price, isNusantara);
 
     const detailBtn = document.createElement('button');
     detailBtn.type = 'button';
@@ -785,22 +901,30 @@ function openProductModal(productId) {
   const product = appState.activeDataset.find(item => Number(item.id) === Number(productId));
   if (!product) return;
 
+  const isNusantara = appState.activeSource === 'coffee_nusantara';
   appState.selectedModalProduct = product;
   dom.modalCategory.textContent = formatCategoryLabel(product.category);
   dom.modalTitle.textContent = product.title;
-  dom.modalPrice.textContent = formatPriceUSD(product.price);
+  dom.modalPrice.textContent = formatPriceBySource(product.price, isNusantara);
   dom.modalDescription.textContent = product.description;
 
   dom.modalImageContainer.replaceChildren();
   dom.modalImageContainer.appendChild(createProductVisualElement(product));
 
   const stockMeta = getStockStatusMeta(product.stock);
-  const specs = [
-    ['Merek / Pembuat', product.brand || 'Kala Seduh'],
-    ['Kode SKU', product.sku || 'KS-' + product.id],
-    ['Status Stok', stockMeta.label],
-    ['Penilaian Produk', (Number(product.rating) || 0).toFixed(2) + ' / 5.00']
-  ];
+  const specs = isNusantara
+    ? [
+        ['Daerah Asal', product.originRegion || 'Nusantara'],
+        ['Profil Sangrai', product.roastLevel || 'Medium'],
+        ['Status Stok', stockMeta.label],
+        ['Kode Produk', product.sku || 'RNM-' + product.id]
+      ]
+    : [
+        ['Merek Produk', product.brand || 'Mitra Katalog'],
+        ['Kode SKU', product.sku || 'API-' + product.id],
+        ['Status Stok', stockMeta.label],
+        ['Penilaian', (Number(product.rating) || 0).toFixed(2) + ' / 5.00']
+      ];
 
   dom.modalSpecs.replaceChildren();
   specs.forEach(([label, val]) => {
@@ -847,23 +971,24 @@ function activateDataset(dataset, sourceType, contextNotice) {
   appState.activeSource = sourceType;
   appState.activeDataset = dataset;
 
-  const isApi = sourceType === 'api';
-  dom.sourceApiBtn.classList.toggle('active', isApi);
-  dom.sourceApiBtn.setAttribute('aria-pressed', String(isApi));
-  dom.sourceCoffeeBtn.classList.toggle('active', !isApi);
-  dom.sourceCoffeeBtn.setAttribute('aria-pressed', String(!isApi));
+  const isNusantara = sourceType === 'coffee_nusantara';
+  dom.sourceCoffeeBtn.classList.toggle('active', isNusantara);
+  dom.sourceCoffeeBtn.setAttribute('aria-pressed', String(isNusantara));
+  dom.sourceApiBtn.classList.toggle('active', !isNusantara);
+  dom.sourceApiBtn.setAttribute('aria-pressed', String(!isNusantara));
 
   dom.collectionContextText.textContent = contextNotice;
-  dom.featuredSourceCaption.textContent = isApi
-    ? 'Menampilkan 3 produk pilihan dengan rating tertinggi dari Katalog Produk API aktif.'
-    : 'Menampilkan 3 produk pilihan dari Koleksi Biji Kopi ([DATA CONTOH] terpisah).';
+  dom.featuredSourceCaption.textContent = isNusantara
+    ? 'Tiga varian biji kopi Nusantara pilihan dari roastery Ranum.'
+    : 'Tiga produk dengan penilaian tertinggi dari Katalog Mitra REST API (https://dummyjson.com/products).';
 
   populateCategoryAndProductSelects(dataset);
   resetAllFilters();
   renderFeaturedSection(dataset);
 }
 
-async function loadApiCatalog(forceErrorSimulation = false) {
+// Memuat data dari endpoint wajib https://dummyjson.com/products dengan async/await
+async function loadApiCatalog(forceErrorSimulation = false, switchViewToApi = true) {
   showLoadingState();
   const targetUrl = forceErrorSimulation
     ? API_CONFIG.BrokenEndpointForTest
@@ -873,19 +998,38 @@ async function loadApiCatalog(forceErrorSimulation = false) {
     const products = await fetchProductsFromApi(targetUrl);
     appState.apiProducts = products;
     recordSuccessfulSyncTimestamp();
-    activateDataset(
-      products,
-      'api',
-      'Menampilkan ' +
-        products.length +
-        ' produk asli dari endpoint resmi https://dummyjson.com/products tanpa memodifikasi nama, harga, atau kategori.'
-    );
+
+    if (switchViewToApi) {
+      activateDataset(
+        products,
+        'api',
+        'Menampilkan ' +
+          products.length +
+          ' produk langsung dari endpoint REST API https://dummyjson.com/products.'
+      );
+    } else {
+      activateDataset(
+        NUSANTARA_BEANS_CATALOG,
+        'coffee_nusantara',
+        'Menampilkan 12 varian biji kopi Nusantara dari UMKM Ranum (Sinkronisasi REST API berhasil).'
+      );
+    }
   } catch (error) {
-    showErrorState(
-      'Katalog belum dapat dimuat dari server (' +
-        error.message +
-        '). Waktu pemuatan terakhir yang berhasil tetap disimpan. Silakan klik "Coba Lagi" atau gunakan salinan cadangan.'
-    );
+    if (switchViewToApi || forceErrorSimulation) {
+      showErrorState(
+        'Katalog belum dapat dimuat dari server (' +
+          error.message +
+          '). Waktu pemuatan terakhir yang berhasil tetap disimpan. Silakan klik "Coba Lagi" atau kembali ke Koleksi Beans Nusantara.'
+      );
+    } else {
+      // Pada saat halaman baru dibuka tanpa internet, tetap tampilkan koleksi Beans Nusantara Ranum
+      recordSuccessfulSyncTimestamp();
+      activateDataset(
+        NUSANTARA_BEANS_CATALOG,
+        'coffee_nusantara',
+        'Menampilkan 12 varian biji kopi Nusantara dari UMKM Ranum (Aceh Gayo, Mandheling, Lintong, Kintamani, Preanger, Ijen, Toraja, Flores, Papua, dan Robusta).'
+      );
+    }
   }
 }
 
@@ -939,13 +1083,11 @@ function clearFormErrors() {
 }
 
 function bindEvents() {
-  // Toggle menu mobile
   dom.mobileNavToggle.addEventListener('click', () => {
     const isOpen = dom.primaryNav.classList.toggle('is-open');
     dom.mobileNavToggle.setAttribute('aria-expanded', String(isOpen));
   });
 
-  // Form pencarian cepat pada header
   dom.headerSearchForm.addEventListener('submit', event => {
     event.preventDefault();
     const query = dom.headerSearchInput.value;
@@ -958,7 +1100,6 @@ function bindEvents() {
     }
   });
 
-  // Sinkronisasi input pencarian katalog & filter kombinasi
   dom.catalogFilterForm.addEventListener('submit', event => {
     event.preventDefault();
   });
@@ -993,7 +1134,17 @@ function bindEvents() {
     resetAllFilters();
   });
 
-  // Pengalih sumber koleksi katalog (Arsitektur Jujur: API Live vs Koleksi Biji Kopi Contoh)
+  // Tab Koleksi Beans Nusantara (Default UMKM Ranum)
+  dom.sourceCoffeeBtn.addEventListener('click', () => {
+    recordSuccessfulSyncTimestamp();
+    activateDataset(
+      NUSANTARA_BEANS_CATALOG,
+      'coffee_nusantara',
+      'Menampilkan 12 varian biji kopi Nusantara dari UMKM Ranum (Aceh Gayo, Mandheling, Lintong, Kintamani, Preanger, Ijen, Toraja, Flores, Papua, dan Robusta).'
+    );
+  });
+
+  // Tab Katalog Mitra REST API (https://dummyjson.com/products)
   dom.sourceApiBtn.addEventListener('click', () => {
     if (appState.apiProducts.length > 0) {
       activateDataset(
@@ -1001,44 +1152,42 @@ function bindEvents() {
         'api',
         'Menampilkan ' +
           appState.apiProducts.length +
-          ' produk asli dari endpoint resmi https://dummyjson.com/products tanpa memodifikasi nama, harga, atau kategori.'
+          ' produk dari endpoint REST API https://dummyjson.com/products.'
       );
     } else {
-      loadApiCatalog(false);
+      loadApiCatalog(false, true);
     }
   });
 
-  dom.sourceCoffeeBtn.addEventListener('click', () => {
-    activateDataset(
-      SAMPLE_COFFEE_COLLECTION,
-      'coffee_sample',
-      'Menampilkan Koleksi Biji Kopi Lokal ([DATA CONTOH] terpisah). Statistik di bawah dihitung murni dari koleksi contoh ini tanpa dicampur dengan data API.'
-    );
-  });
-
   dom.refreshCatalogBtn.addEventListener('click', () => {
-    loadApiCatalog(false);
+    if (appState.activeSource === 'api') {
+      loadApiCatalog(false, true);
+    } else {
+      loadApiCatalog(false, false);
+    }
   });
 
   dom.simulateErrorBtn.addEventListener('click', () => {
-    loadApiCatalog(true);
+    loadApiCatalog(true, true);
   });
 
   dom.retryFetchBtn.addEventListener('click', () => {
-    loadApiCatalog(false);
+    if (appState.activeSource === 'api') {
+      loadApiCatalog(false, true);
+    } else {
+      loadApiCatalog(false, false);
+    }
   });
 
   dom.fallbackSnapshotBtn.addEventListener('click', () => {
-    appState.apiProducts = VERIFIED_API_FALLBACK_PRODUCTS;
     recordSuccessfulSyncTimestamp();
     activateDataset(
-      VERIFIED_API_FALLBACK_PRODUCTS,
-      'api',
-      'Menampilkan salinan cadangan terverifikasi dari struktur https://dummyjson.com/products (mode offline).'
+      NUSANTARA_BEANS_CATALOG,
+      'coffee_nusantara',
+      'Menampilkan 12 varian biji kopi Nusantara dari UMKM Ranum.'
     );
   });
 
-  // Modal events
   dom.modalCloseBtn.addEventListener('click', () => {
     closeProductModal();
   });
@@ -1062,7 +1211,6 @@ function bindEvents() {
     }
   });
 
-  // Validasi dan penyimpanan Form Permintaan Informasi Produk
   dom.inquiryForm.addEventListener('submit', event => {
     event.preventDefault();
     clearFormErrors();
@@ -1105,7 +1253,9 @@ function bindEvents() {
       result.cleaned.name +
       '. Permintaan informasi untuk "' +
       result.cleaned.product +
-      '" telah dicatat pada penyimpanan lokal perangkat ini (website etalase ini berjalan tanpa server pengiriman pesan belakang).';
+      '" (' +
+      result.cleaned.purpose +
+      ') telah dicatat pada perangkat ini oleh etalase Ranum.';
     dom.inquirySuccessBanner.classList.remove('hidden');
     dom.inquiryForm.reset();
   });
@@ -1126,5 +1276,6 @@ document.addEventListener('DOMContentLoaded', () => {
   updateTimestampDisplay();
   renderSavedInquiries();
   bindEvents();
-  loadApiCatalog(false);
+  // Tampilkan katalog Beans Nusantara Ranum dan jalankan sinkronisasi REST API di latar
+  loadApiCatalog(false, false);
 });

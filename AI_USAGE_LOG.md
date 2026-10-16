@@ -2,7 +2,7 @@
 
 - **Nama Mahasiswa**: Rizki Ramadhan
 - **NIM**: 2440304010
-- **Nama Aplikasi**: Kala Seduh Roastery & Pantry
+- **Nama Aplikasi**: Ranum Kopi Nusantara
 
 | Tanggal | AI / Tool | Tujuan | Prompt / Ringkasan | Bagian Digunakan | Verifikasi / Modifikasi Mahasiswa |
 | :--- | :--- | :--- | :--- | :--- | :--- |
