@@ -287,3 +287,66 @@ function getStockStatusMeta(stockCount) {
   }
   return { code: 'IN_STOCK', label: 'Tersedia (' + stock + ')', cssClass: 'stock-ok' };
 }
+
+// Penyaringan & pengurutan produk menggunakan filter() dan sort() (Fitur Wajib Y=1)
+function computeFilteredProducts(dataset, filters) {
+  const query = filters.searchQuery.trim().toLowerCase();
+
+  const filtered = dataset.filter(item => {
+    const titleMatch = String(item.title || '').toLowerCase().includes(query);
+    const descMatch = String(item.description || '').toLowerCase().includes(query);
+    const categoryMatch = String(item.category || '').toLowerCase().includes(query);
+    const matchesQuery = !query || titleMatch || descMatch || categoryMatch;
+
+    const matchesCategory =
+      filters.category === 'ALL' || item.category === filters.category;
+
+    const stockMeta = getStockStatusMeta(item.stock);
+    const matchesAvailability =
+      filters.availability === 'ALL' || stockMeta.code === filters.availability;
+
+    return matchesQuery && matchesCategory && matchesAvailability;
+  });
+
+  const sorted = [...filtered];
+  if (filters.sortBy === 'PRICE_ASC') {
+    sorted.sort((a, b) => Number(a.price) - Number(b.price));
+  } else if (filters.sortBy === 'PRICE_DESC') {
+    sorted.sort((a, b) => Number(b.price) - Number(a.price));
+  } else if (filters.sortBy === 'TITLE_ASC') {
+    sorted.sort((a, b) => String(a.title).localeCompare(String(b.title), 'id'));
+  }
+
+  return sorted;
+}
+
+// Perhitungan Statistik Katalog menggunakan reduce() dan map() (Fitur Wajib Y=1 & Analisis Data)
+function computeCatalogStatistics(filteredItems, totalDataset) {
+  const count = filteredItems.length;
+  const totalCount = totalDataset.length;
+
+  if (count === 0) {
+    return {
+      countText: '0 dari ' + totalCount + ' produk',
+      averagePriceText: '$0.00',
+      highestProductText: 'Tidak ada produk tampil',
+      categoryCountText: '0 kategori'
+    };
+  }
+
+  const totalPrice = filteredItems.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
+  const averagePrice = totalPrice / count;
+
+  const highestItem = filteredItems.reduce((highest, current) => {
+    return (Number(current.price) || 0) > (Number(highest.price) || 0) ? current : highest;
+  }, filteredItems[0]);
+
+  const uniqueCategories = new Set(filteredItems.map(item => item.category));
+
+  return {
+    countText: count + ' dari ' + totalCount + ' produk',
+    averagePriceText: formatPriceUSD(averagePrice),
+    highestProductText: highestItem.title + ' (' + formatPriceUSD(highestItem.price) + ')',
+    categoryCountText: uniqueCategories.size + ' kategori'
+  };
+}
