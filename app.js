@@ -215,21 +215,29 @@ const appState = {
   selectedModalProduct: null
 };
 
-// Fungsi utilitas penyimpanan aman ke localStorage
+// Fungsi utilitas penyimpanan aman ke localStorage dengan cadangan memori sesi
+const memoryStorageFallback = {};
+
 function safeGetStorage(key, fallbackValue = null) {
   try {
     const raw = window.localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallbackValue;
+    if (raw !== null) {
+      return JSON.parse(raw);
+    }
   } catch (err) {
-    return fallbackValue;
+    // Gunakan cadangan memori apabila akses localStorage dibatasi sandbox
   }
+  return Object.prototype.hasOwnProperty.call(memoryStorageFallback, key)
+    ? memoryStorageFallback[key]
+    : fallbackValue;
 }
 
 function safeSetStorage(key, value) {
+  memoryStorageFallback[key] = value;
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
   } catch (err) {
-    // Abaikan jika browser membatasi akses localStorage pada mode privat
+    // Nilai tetap terjaga pada memoryStorageFallback selama sesi aktif
   }
 }
 
