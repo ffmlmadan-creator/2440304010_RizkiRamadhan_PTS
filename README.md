@@ -97,14 +97,16 @@ Proyek ini dibuat murni dengan HTML5, CSS3, dan Vanilla JavaScript tanpa proses 
 
 ---
 
-## 7. Screenshot Desktop dan Mobile
+## 7. Screenshot Tampilan Desktop, Tablet, dan Mobile
 
-> *Catatan: File gambar screenshot juga disertakan langsung di dalam folder pengumpulan Google Drive.*
+> *Catatan: File gambar screenshot juga disertakan langsung di dalam folder project dan sudah disesuaikan dengan tampilan desktop, tablet, serta mobile.*
 
 * **Tampilan Desktop ($\ge 1024\text{px}$):**
-  ![Screenshot Desktop](screenshots/desktop-view.png)
+  ![Screenshot Desktop](screenshots/tampilan%20dekstop.png)
+* **Tampilan Tablet ($\ge 768\text{px}$ dan $\le 1023\text{px}$):**
+  ![Screenshot Tablet](screenshots/tampilan%20tablet.png)
 * **Tampilan Mobile ($\le 480\text{px}$):**
-  ![Screenshot Mobile](screenshots/mobile-view.png)
+  ![Screenshot Mobile](screenshots/tampilan%20mobile.png)
 
 ---
 
