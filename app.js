@@ -1,323 +1,97 @@
-// Konfigurasi Endpoint REST API Wajib (NIM 2440304010 -> Digit X = 0 -> Products)
-const API_CONFIG = {
-  PRIMARY_ENDPOINT: 'https://dummyjson.com/products',
-  BrokenEndpointForTest: 'https://dummyjson.com/products-invalid-endpoint-404',
-  STORAGE_KEYS: {
-    LAST_SUCCESS_SYNC: 'ranum_last_sync_timestamp',
-    SAVED_INQUIRIES: 'ranum_saved_inquiries_v1'
-  }
+'use strict';
+
+/* ==========================================================================
+   Ranum - Dashboard Produk UMKM
+   PTS Pemrograman Web (26TJ453127)
+   Rizki Ramadhan - NIM 2440304010 - Teknik Komputer UBT
+
+   Varian NIM (3 digit terakhir = 010):
+   - X = 0 : Dataset Products dari REST API DummyJSON
+   - Y = 1 : Filter data + statistik sederhana
+   - Z = 0 : Validasi form (nama minimal 5 karakter setelah trim)
+   - C = (0 + 1 + 0) mod 4 = 1 : Tombol Retry saat fetch gagal + timestamp
+   ========================================================================== */
+
+/* -------------------------------------------------------------------------
+   1. Konstanta & State
+   ------------------------------------------------------------------------- */
+
+const API_URL = 'https://dummyjson.com/products';
+// Endpoint DummyJSON yang selalu merespons HTTP 503, dipakai untuk simulasi gagal
+const SIMULATED_FAILURE_URL = 'https://dummyjson.com/http/503';
+const FETCH_TIMEOUT_MS = 10000;
+const MIN_NAME_LENGTH = 5;
+const MIN_NOTES_LENGTH = 10;
+const MAX_NOTES_LENGTH = 500;
+const SKELETON_CARD_COUNT = 10;
+
+const STORAGE_KEYS = {
+  SAVED_INQUIRIES: 'ranum_saved_inquiries_v1',
+  LAST_SUCCESS_AT: 'ranum_last_success_at_v1'
 };
 
-// Katalog Utama UMKM Ranum: 12 Varian Biji Kopi (Beans) dari Berbagai Daerah Nusantara
-const NUSANTARA_BEANS_CATALOG = [
-  {
-    id: 101,
-    title: 'Arabika Aceh Gayo Takengon 250g',
-    description: 'Biji kopi dataran tinggi Gayo dengan karakter bersih, tekstur lembut, dan nyaman untuk seduhan V60 maupun tubruk pagi hari.',
-    category: 'arabika-sumatera',
-    price: 95000,
-    rating: 4.94,
-    stock: 28,
-    brand: 'Ranum Roastery',
-    sku: 'RNM-SUM-01',
-    originRegion: 'Aceh Tengah, Sumatera',
-    roastLevel: 'Medium (Filter & Manual Brew)',
-    isNusantaraBean: true,
-    accentHex: '#1E3F2B'
-  },
-  {
-    id: 102,
-    title: 'Arabika Mandheling Tapanuli 250g',
-    description: 'Biji kopi asal Tapanuli Selatan dengan kekentalan mantap dan tingkat keasaman rendah, cocok untuk penikmat kopi pekat.',
-    category: 'arabika-sumatera',
-    price: 98000,
-    rating: 4.88,
-    stock: 19,
-    brand: 'Ranum Roastery',
-    sku: 'RNM-SUM-02',
-    originRegion: 'Tapanuli Selatan, Sumatera Utara',
-    roastLevel: 'Medium-Dark (Tubruk & Espresso)',
-    isNusantaraBean: true,
-    accentHex: '#3A2618'
-  },
-  {
-    id: 103,
-    title: 'Arabika Lintong Nihuta 250g',
-    description: 'Biji kopi dari tepian Danau Toba Kabupaten Humbang Hasundutan dengan aroma rempah hangat yang seimbang.',
-    category: 'arabika-sumatera',
-    price: 92000,
-    rating: 4.83,
-    stock: 8,
-    brand: 'Ranum Roastery',
-    sku: 'RNM-SUM-03',
-    originRegion: 'Humbang Hasundutan, Sumatera Utara',
-    roastLevel: 'Medium (Pour Over & AeroPress)',
-    isNusantaraBean: true,
-    accentHex: '#2C4C38'
-  },
-  {
-    id: 104,
-    title: 'Arabika Kintamani Bali 250g',
-    description: 'Ditanam berdampingan dengan kebun jeruk di lereng Gunung Batur, menghasilkan seduhan segar untuk V60 atau Japanese Iced Coffee.',
-    category: 'arabika-jawa-bali',
-    price: 90000,
-    rating: 4.91,
-    stock: 24,
-    brand: 'Ranum Roastery',
-    sku: 'RNM-JWB-01',
-    originRegion: 'Bangli, Bali',
-    roastLevel: 'Light-Medium (V60 & Japanese Iced)',
-    isNusantaraBean: true,
-    accentHex: '#1E3F2B'
-  },
-  {
-    id: 105,
-    title: 'Arabika Java Preanger Malabar 250g',
-    description: 'Kopi pegunungan Jawa Barat dengan karakter manis alami yang halus dan nyaman diminum sepanjang hari.',
-    category: 'arabika-jawa-bali',
-    price: 96000,
-    rating: 4.86,
-    stock: 15,
-    brand: 'Ranum Roastery',
-    sku: 'RNM-JWB-02',
-    originRegion: 'Pangalengan, Jawa Barat',
-    roastLevel: 'Medium (Filter & French Press)',
-    isNusantaraBean: true,
-    accentHex: '#4A3322'
-  },
-  {
-    id: 106,
-    title: 'Arabika Ijen Raung Bondowoso 250g',
-    description: 'Biji kopi dari lereng Gunung Ijen Jawa Timur dengan profil rasa seimbang antara manis gula merah dan kesegaran ringan.',
-    category: 'arabika-jawa-bali',
-    price: 88000,
-    rating: 4.79,
-    stock: 6,
-    brand: 'Ranum Roastery',
-    sku: 'RNM-JWB-03',
-    originRegion: 'Bondowoso, Jawa Timur',
-    roastLevel: 'Medium (Manual Brew & Drip)',
-    isNusantaraBean: true,
-    accentHex: '#2C4C38'
-  },
-  {
-    id: 107,
-    title: 'Arabika Toraja Sapan 250g',
-    description: 'Biji kopi dari dataran tinggi Sapan Sulawesi Selatan dengan tekstur seduhan yang bersih dan akhir rasa yang panjang.',
-    category: 'arabika-sulawesi-timur',
-    price: 108000,
-    rating: 4.95,
-    stock: 14,
-    brand: 'Ranum Roastery',
-    sku: 'RNM-TIM-01',
-    originRegion: 'Toraja Utara, Sulawesi Selatan',
-    roastLevel: 'Medium (Pour Over & Moka Pot)',
-    isNusantaraBean: true,
-    accentHex: '#1E3F2B'
-  },
-  {
-    id: 108,
-    title: 'Arabika Flores Bajawa Ngada 250g',
-    description: 'Biji kopi asal dataran tinggi Ngada Nusa Tenggara Timur dengan karakter coklat pekat yang pas untuk moka pot maupun filter.',
-    category: 'arabika-sulawesi-timur',
-    price: 94000,
-    rating: 4.87,
-    stock: 5,
-    brand: 'Ranum Roastery',
-    sku: 'RNM-TIM-02',
-    originRegion: 'Ngada, Flores, NTT',
-    roastLevel: 'Medium-Dark (Moka Pot & Tubruk)',
-    isNusantaraBean: true,
-    accentHex: '#3A2618'
-  },
-  {
-    id: 109,
-    title: 'Arabika Papua Wamena Lembah Baliem 250g',
-    description: 'Biji kopi dari pegunungan Jayawijaya Lembah Baliem dengan profil seduhan yang lembut dan aroma hangat.',
-    category: 'arabika-sulawesi-timur',
-    price: 115000,
-    rating: 4.92,
-    stock: 0,
-    brand: 'Ranum Roastery',
-    sku: 'RNM-TIM-03',
-    originRegion: 'Jayawijaya, Papua Pegunungan',
-    roastLevel: 'Medium (V60 & AeroPress)',
-    isNusantaraBean: true,
-    accentHex: '#1E3F2B'
-  },
-  {
-    id: 110,
-    title: 'Robusta Temanggung Pilihan 500g',
-    description: 'Biji kopi Robusta petik merah dari lereng Sindoro-Sumbing, menghasilkan krema tebal untuk kopi susu maupun kopi tubruk.',
-    category: 'robusta-dan-blend',
-    price: 85000,
-    rating: 4.81,
-    stock: 32,
-    brand: 'Ranum Roastery',
-    sku: 'RNM-RBS-01',
-    originRegion: 'Temanggung, Jawa Tengah',
-    roastLevel: 'Medium-Dark (Kopi Susu & Vietnam Drip)',
-    isNusantaraBean: true,
-    accentHex: '#5C4332'
-  },
-  {
-    id: 111,
-    title: 'Robusta Lampung Barat 500g',
-    description: 'Biji kopi Robusta klasik asal Lampung Barat dengan karakter mantap untuk bahan dasar es kopi susu gula aren di rumah.',
-    category: 'robusta-dan-blend',
-    price: 78000,
-    rating: 4.76,
-    stock: 22,
-    brand: 'Ranum Roastery',
-    sku: 'RNM-RBS-02',
-    originRegion: 'Lampung Barat, Sumatera',
-    roastLevel: 'Dark (Espresso & Kopi Susu)',
-    isNusantaraBean: true,
-    accentHex: '#3A2618'
-  },
-  {
-    id: 112,
-    title: 'Racikan Rumah Ranum Nusantara 500g',
-    description: 'Perpaduan seimbang 70% Arabika Gayo dan 30% Robusta Temanggung khusus untuk ekstraksi mesin espresso rumahan maupun kedai.',
-    category: 'robusta-dan-blend',
-    price: 135000,
-    rating: 4.96,
-    stock: 9,
-    brand: 'Ranum Roastery',
-    sku: 'RNM-BLD-01',
-    originRegion: 'Paduan Aceh Gayo & Temanggung',
-    roastLevel: 'Medium-Dark (House Blend Espresso)',
-    isNusantaraBean: true,
-    accentHex: '#1E3F2B'
-  }
-];
+const DEFAULT_FILTERS = Object.freeze({
+  searchQuery: '',
+  category: 'ALL',
+  availability: 'ALL',
+  sortBy: 'DEFAULT'
+});
 
-// Salinan cadangan terverifikasi dari struktur asli https://dummyjson.com/products
-const VERIFIED_API_FALLBACK_PRODUCTS = [
-  {
-    id: 1,
-    title: 'Essence Mascara Lash Princess',
-    description: 'The Essence Mascara Lash Princess is a popular mascara known for its volumizing and lengthening effects.',
-    category: 'beauty',
-    price: 9.99,
-    rating: 4.94,
-    stock: 5,
-    brand: 'Essence',
-    sku: 'RCH45Q1A',
-    availabilityStatus: 'Low Stock'
-  },
-  {
-    id: 6,
-    title: 'Calvin Klein CK One',
-    description: 'CK One by Calvin Klein is a classic unisex fragrance, known for its fresh and clean scent.',
-    category: 'fragrances',
-    price: 49.99,
-    rating: 4.85,
-    stock: 17,
-    brand: 'Calvin Klein',
-    sku: 'DZM2JQZE',
-    availabilityStatus: 'In Stock'
-  },
-  {
-    id: 11,
-    title: 'Annibale Colombo Bed',
-    description: 'The Annibale Colombo Bed is a luxurious and spacious bed frame, crafted with high-quality materials.',
-    category: 'furniture',
-    price: 1899.99,
-    rating: 4.14,
-    stock: 47,
-    brand: 'Annibale Colombo',
-    sku: '4KMDTZWF',
-    availabilityStatus: 'In Stock'
-  },
-  {
-    id: 16,
-    title: 'Apple',
-    description: 'Fresh and crisp apples, suitable for snacking or incorporating into various recipes.',
-    category: 'groceries',
-    price: 1.99,
-    rating: 4.19,
-    stock: 9,
-    brand: 'Fresh Farm',
-    sku: 'QTROUV79',
-    availabilityStatus: 'Low Stock'
-  },
-  {
-    id: 20,
-    title: 'Cooking Oil',
-    description: 'Versatile cooking oil suitable for frying, sauteing, and various culinary applications.',
-    category: 'groceries',
-    price: 4.99,
-    rating: 4.8,
-    stock: 10,
-    brand: 'Pantry Essentials',
-    sku: 'B6F79V52',
-    availabilityStatus: 'Low Stock'
-  },
-  {
-    id: 27,
-    title: 'Honey Jar',
-    description: 'Pure and natural honey in a convenient jar, ideal for sweetening beverages or drizzling over food.',
-    category: 'groceries',
-    price: 6.99,
-    rating: 3.5,
-    stock: 25,
-    brand: 'Nature Hive',
-    sku: '46M5O9G6',
-    availabilityStatus: 'In Stock'
-  },
-  {
-    id: 29,
-    title: 'Juice',
-    description: 'Refreshing fruit juice, packed with vitamins and great for staying hydrated.',
-    category: 'groceries',
-    price: 3.99,
-    rating: 3.94,
-    stock: 50,
-    brand: 'Orchard Press',
-    sku: '9W8E1K32',
-    availabilityStatus: 'In Stock'
-  },
-  {
-    id: 30,
-    title: 'Kiwi',
-    description: 'Nutrient-rich kiwi, suitable for snacking or adding a tropical twist to your dishes.',
-    category: 'groceries',
-    price: 2.49,
-    rating: 4.93,
-    stock: 0,
-    brand: 'Green Orchard',
-    sku: '0X1K9P44',
-    availabilityStatus: 'Out of Stock'
-  }
-];
+// Label kategori DummyJSON dalam Bahasa Indonesia (fallback: Title Case dari slug)
+const CATEGORY_LABELS = {
+  beauty: 'Kecantikan',
+  fragrances: 'Parfum',
+  furniture: 'Furnitur',
+  groceries: 'Bahan Pangan',
+  'home-decoration': 'Dekorasi Rumah',
+  'kitchen-accessories': 'Peralatan Dapur',
+  laptops: 'Laptop',
+  'mens-shirts': 'Kemeja Pria',
+  'mens-shoes': 'Sepatu Pria',
+  'mens-watches': 'Jam Tangan Pria',
+  'mobile-accessories': 'Aksesori Ponsel',
+  motorcycle: 'Sepeda Motor',
+  'skin-care': 'Perawatan Kulit',
+  smartphones: 'Smartphone',
+  'sports-accessories': 'Perlengkapan Olahraga',
+  sunglasses: 'Kacamata Hitam',
+  tablets: 'Tablet',
+  tops: 'Atasan',
+  vehicle: 'Kendaraan',
+  'womens-bags': 'Tas Wanita',
+  'womens-dresses': 'Gaun Wanita',
+  'womens-jewellery': 'Perhiasan Wanita',
+  'womens-shoes': 'Sepatu Wanita',
+  'womens-watches': 'Jam Tangan Wanita'
+};
 
 // State terpusat aplikasi
 const appState = {
-  activeSource: 'coffee_nusantara', // 'coffee_nusantara' | 'api'
-  apiProducts: [],
-  activeDataset: NUSANTARA_BEANS_CATALOG,
+  status: 'idle', // 'idle' | 'loading' | 'success' | 'error'
+  isFetching: false,
+  products: [],
   filteredProducts: [],
-  filters: {
-    searchQuery: '',
-    category: 'ALL',
-    availability: 'ALL',
-    sortBy: 'DEFAULT'
-  },
+  filters: { ...DEFAULT_FILTERS },
+  lastSuccessAt: null, // Date terakhir data berhasil dimuat
+  errorMessage: '',
   selectedModalProduct: null
 };
 
-// Fungsi utilitas penyimpanan aman ke localStorage dengan cadangan memori sesi
+// Simulasi gagal sekali untuk demonstrasi tombol Retry: buka index.html?simulasi=gagal
+let simulateFailureOnce = new URLSearchParams(window.location.search).get('simulasi') === 'gagal';
+
+/* -------------------------------------------------------------------------
+   2. Utilitas Penyimpanan (localStorage dengan cadangan memori)
+   ------------------------------------------------------------------------- */
+
 const memoryStorageFallback = {};
 
 function safeGetStorage(key, fallbackValue = null) {
   try {
     const raw = window.localStorage.getItem(key);
-    if (raw !== null) {
-      return JSON.parse(raw);
-    }
+    if (raw !== null) return JSON.parse(raw);
   } catch (err) {
-    // Gunakan cadangan memori apabila akses localStorage dibatasi sandbox
+    // localStorage dapat diblokir (mode privat / sandbox); gunakan cadangan memori
   }
   return Object.prototype.hasOwnProperty.call(memoryStorageFallback, key)
     ? memoryStorageFallback[key]
@@ -329,71 +103,48 @@ function safeSetStorage(key, value) {
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
   } catch (err) {
-    // Nilai tetap terjaga pada memoryStorageFallback selama sesi aktif
+    // Nilai tetap tersimpan pada memoryStorageFallback selama sesi aktif
   }
 }
 
-// Pengambilan data REST API menggunakan Fetch API dan async/await
-async function fetchProductsFromApi(customUrl = API_CONFIG.PRIMARY_ENDPOINT) {
-  const response = await fetch(customUrl);
-  if (!response.ok) {
-    throw new Error('Status HTTP ' + response.status + ' saat memuat katalog.');
-  }
-  const payload = await response.json();
-  if (!payload || !Array.isArray(payload.products)) {
-    throw new Error('Format JSON katalog tidak sesuai spesifikasi.');
-  }
-  return payload.products;
+function readStoredTimestamp() {
+  const iso = safeGetStorage(STORAGE_KEYS.LAST_SUCCESS_AT, null);
+  if (!iso) return null;
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
-// Pembuatan ilustrasi SVG kemasan kopi Ranum proporsi 4:3 yang konsisten
-function createPackagingSvgDataUri(product) {
-  const rawTitle = String(product.title || 'Beans Nusantara').replace(/^Arabika\s+/i, '').replace(/\s+\d+g$/i, '');
-  const safeTitle = rawTitle.slice(0, 22).toUpperCase();
-  const regionText = String(product.originRegion || formatCategoryLabel(product.category)).slice(0, 28);
-  const roastText = String(product.roastLevel || 'RANUM ROASTERY').slice(0, 28);
-  const labelColor = product.accentHex || '#1E3F2B';
-  const weightMatch = String(product.title || '').match(/(\d+g)/i);
-  const weightBadge = weightMatch ? weightMatch[1].toUpperCase() : '250G';
+/* -------------------------------------------------------------------------
+   3. Utilitas Format
+   ------------------------------------------------------------------------- */
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
-    <rect width="400" height="300" fill="#EFE9DC"/>
-    <circle cx="315" cy="76" r="46" fill="#E3DAC8"/>
-    <rect x="36" y="252" width="328" height="28" fill="#DFD5C0"/>
-    <path d="M114 26 H286 L298 264 H102 Z" fill="#FBF9F5" stroke="#231710" stroke-width="2.5"/>
-    <path d="M114 26 H286 L278 54 H122 Z" fill="#DFD5C0" stroke="#231710" stroke-width="2.5"/>
-    <rect x="128" y="72" width="144" height="156" fill="${labelColor}"/>
-    <rect x="136" y="80" width="128" height="140" fill="none" stroke="#F7F3EB" stroke-width="1" opacity="0.55"/>
-    <text x="200" y="104" text-anchor="middle" fill="#E3DAC8" font-family="Georgia, serif" font-size="10" letter-spacing="2">RANUM KOPI</text>
-    <text x="200" y="132" text-anchor="middle" fill="#FFFFFF" font-family="Georgia, serif" font-size="13.5" font-weight="bold">${safeTitle}</text>
-    <line x1="154" y1="146" x2="246" y2="146" stroke="#E3DAC8" stroke-width="1"/>
-    <text x="200" y="166" text-anchor="middle" fill="#F7F3EB" font-family="sans-serif" font-size="9.5">${regionText}</text>
-    <text x="200" y="186" text-anchor="middle" fill="#E3DAC8" font-family="sans-serif" font-size="8.5">${roastText}</text>
-    <text x="200" y="208" text-anchor="middle" fill="#FFFFFF" font-family="sans-serif" font-size="9.5" font-weight="bold">BIJI KOPI ${weightBadge}</text>
-  </svg>`;
-  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+// Harga DummyJSON dalam Dolar AS, sehingga ditampilkan apa adanya dalam USD
+const priceFormatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+
+function formatPrice(value) {
+  return priceFormatter.format(Number(value) || 0);
 }
 
-function formatPriceBySource(value, isNusantara = appState.activeSource === 'coffee_nusantara') {
-  const num = Number(value) || 0;
-  if (isNusantara || num >= 1000) {
-    return 'Rp' + Math.round(num).toLocaleString('id-ID');
-  }
-  return '$' + num.toFixed(2);
-}
+// Contoh hasil: "21 Okt 2026, 23:16 WITA" (zona waktu Asia/Makassar)
+const witaFormatter = new Intl.DateTimeFormat('id-ID', {
+  timeZone: 'Asia/Makassar',
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23'
+});
 
-const CATEGORY_DISPLAY_NAMES = {
-  'arabika-sumatera': 'Arabika Sumatera',
-  'arabika-jawa-bali': 'Arabika Jawa & Bali',
-  'arabika-sulawesi-timur': 'Arabika Sulawesi & Timur',
-  'robusta-dan-blend': 'Robusta & House Blend'
-};
+function formatTimestampWITA(date) {
+  const parts = witaFormatter.formatToParts(date);
+  const pick = type => (parts.find(part => part.type === type) || {}).value || '';
+  return `${pick('day')} ${pick('month').replace('.', '')} ${pick('year')}, ${pick('hour')}:${pick('minute')} WITA`;
+}
 
 function formatCategoryLabel(slug) {
-  if (!slug) return 'Umum';
-  if (CATEGORY_DISPLAY_NAMES[slug]) {
-    return CATEGORY_DISPLAY_NAMES[slug];
-  }
+  if (!slug) return 'Lainnya';
+  if (CATEGORY_LABELS[slug]) return CATEGORY_LABELS[slug];
   return String(slug)
     .split('-')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -402,545 +153,738 @@ function formatCategoryLabel(slug) {
 
 function getStockStatusMeta(stockCount) {
   const stock = Number(stockCount) || 0;
-  if (stock <= 0) {
-    return { code: 'OUT_OF_STOCK', label: 'Stok Habis (0)', cssClass: 'stock-out' };
-  }
-  if (stock <= 10) {
-    return { code: 'LOW_STOCK', label: 'Stok Terbatas (' + stock + ')', cssClass: 'stock-low' };
-  }
-  return { code: 'IN_STOCK', label: 'Tersedia (' + stock + ')', cssClass: 'stock-ok' };
+  if (stock <= 0) return { code: 'OUT_OF_STOCK', label: 'Stok Habis', cssClass: 'stock-out' };
+  if (stock <= 10) return { code: 'LOW_STOCK', label: `Sisa ${stock}`, cssClass: 'stock-low' };
+  return { code: 'IN_STOCK', label: `Stok ${stock}`, cssClass: 'stock-ok' };
 }
 
-// Penyaringan & pengurutan produk menggunakan filter() dan sort() (Fitur Wajib Y=1)
-function computeFilteredProducts(dataset, filters) {
-  const query = filters.searchQuery.trim().toLowerCase();
-
-  const filtered = dataset.filter(item => {
-    const titleMatch = String(item.title || '').toLowerCase().includes(query);
-    const descMatch = String(item.description || '').toLowerCase().includes(query);
-    const categoryMatch = String(item.category || '').toLowerCase().includes(query);
-    const regionMatch = String(item.originRegion || '').toLowerCase().includes(query);
-    const roastMatch = String(item.roastLevel || '').toLowerCase().includes(query);
-    const matchesQuery = !query || titleMatch || descMatch || categoryMatch || regionMatch || roastMatch;
-
-    const matchesCategory =
-      filters.category === 'ALL' || item.category === filters.category;
-
-    const stockMeta = getStockStatusMeta(item.stock);
-    const matchesAvailability =
-      filters.availability === 'ALL' || stockMeta.code === filters.availability;
-
-    return matchesQuery && matchesCategory && matchesAvailability;
-  });
-
-  const sorted = [...filtered];
-  if (filters.sortBy === 'PRICE_ASC') {
-    sorted.sort((a, b) => Number(a.price) - Number(b.price));
-  } else if (filters.sortBy === 'PRICE_DESC') {
-    sorted.sort((a, b) => Number(b.price) - Number(a.price));
-  } else if (filters.sortBy === 'TITLE_ASC') {
-    sorted.sort((a, b) => String(a.title).localeCompare(String(b.title), 'id'));
-  }
-
-  return sorted;
+function escapeXml(text) {
+  return String(text).replace(/[<>&'"]/g, char => ({
+    '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;'
+  }[char]));
 }
 
-// Perhitungan Statistik Katalog menggunakan reduce() dan map() (Fitur Wajib Y=1 & Analisis Data)
-function computeCatalogStatistics(filteredItems, totalDataset) {
-  const count = filteredItems.length;
-  const totalCount = totalDataset.length;
-  const isNusantara = appState.activeSource === 'coffee_nusantara';
+/* -------------------------------------------------------------------------
+   4. Fetch API: Mengambil & Memetakan Data DummyJSON (Digit X = 0)
+   ------------------------------------------------------------------------- */
 
-  if (count === 0) {
-    return {
-      countText: '0 dari ' + totalCount + ' produk',
-      averagePriceText: isNusantara ? 'Rp0' : '$0.00',
-      highestProductText: 'Tidak ada produk tampil',
-      categoryCountText: '0 kategori'
-    };
-  }
-
-  const totalPrice = filteredItems.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
-  const averagePrice = totalPrice / count;
-
-  const highestItem = filteredItems.reduce((highest, current) => {
-    return (Number(current.price) || 0) > (Number(highest.price) || 0) ? current : highest;
-  }, filteredItems[0]);
-
-  const uniqueCategories = new Set(filteredItems.map(item => item.category));
-
+// Pemetaan satu objek mentah API ke bentuk data yang dipakai antarmuka
+function normalizeProduct(raw) {
+  const images = Array.isArray(raw.images) ? raw.images.filter(Boolean) : [];
+  const stock = Number(raw.stock);
   return {
-    countText: count + ' dari ' + totalCount + ' produk',
-    averagePriceText: formatPriceBySource(averagePrice, isNusantara),
-    highestProductText:
-      highestItem.title + ' (' + formatPriceBySource(highestItem.price, isNusantara) + ')',
-    categoryCountText: uniqueCategories.size + ' kategori'
+    id: Number(raw.id),
+    title: String(raw.title || 'Produk Tanpa Nama'),
+    description: String(raw.description || ''),
+    category: String(raw.category || 'lainnya'),
+    price: Number(raw.price) || 0,
+    discountPercentage: Number(raw.discountPercentage) || 0,
+    rating: Number(raw.rating) || 0,
+    stock: Number.isFinite(stock) ? stock : 0,
+    brand: raw.brand ? String(raw.brand) : '',
+    sku: raw.sku ? String(raw.sku) : '',
+    thumbnail: raw.thumbnail || images[0] || '',
+    images
   };
 }
 
-// Validasi Form Permintaan Informasi Produk (Digit Z = 0: Nama minimal 5 karakter setelah trim)
+async function fetchProducts(url) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+
+    // Status HTTP selain 2xx dianggap gagal
+    if (!response.ok) {
+      const statusText = response.statusText ? ` ${response.statusText}` : '';
+      throw new Error(`Server merespons dengan status HTTP ${response.status}${statusText}.`);
+    }
+
+    const payload = await response.json();
+    if (!payload || !Array.isArray(payload.products)) {
+      throw new Error('Format data dari API tidak sesuai (properti "products" tidak ditemukan).');
+    }
+
+    return payload.products.map(normalizeProduct);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+function describeFetchError(error) {
+  if (error && error.name === 'AbortError') {
+    return `Permintaan melebihi batas waktu ${FETCH_TIMEOUT_MS / 1000} detik. Periksa koneksi internet Anda.`;
+  }
+  if (!navigator.onLine) {
+    return 'Perangkat sedang offline. Periksa koneksi internet Anda, lalu tekan "Coba Lagi".';
+  }
+  if (error instanceof TypeError) {
+    return 'Tidak dapat terhubung ke server DummyJSON (jaringan terputus atau permintaan diblokir).';
+  }
+  if (error instanceof SyntaxError) {
+    return 'Respons server bukan data JSON yang valid.';
+  }
+  return (error && error.message) || 'Terjadi kesalahan yang tidak terduga.';
+}
+
+async function loadProducts() {
+  if (appState.isFetching) return;
+  appState.isFetching = true;
+  setUiState('loading');
+
+  const url = simulateFailureOnce ? SIMULATED_FAILURE_URL : API_URL;
+  simulateFailureOnce = false;
+
+  try {
+    const products = await fetchProducts(url);
+
+    appState.products = products;
+    appState.lastSuccessAt = new Date();
+    safeSetStorage(STORAGE_KEYS.LAST_SUCCESS_AT, appState.lastSuccessAt.toISOString());
+
+    populateCategoryFilter(products);
+    populateProductSelect(products);
+    renderFeaturedSection(products);
+    setUiState('success');
+    renderCatalogAndStats();
+  } catch (error) {
+    console.error('[Ranum] Gagal memuat data produk:', error);
+    appState.errorMessage = describeFetchError(error);
+    setUiState('error');
+  } finally {
+    appState.isFetching = false;
+  }
+}
+
+/* -------------------------------------------------------------------------
+   5. Filter & Statistik (Digit Y = 1)
+   ------------------------------------------------------------------------- */
+
+const SORTERS = {
+  PRICE_ASC: (a, b) => a.price - b.price,
+  PRICE_DESC: (a, b) => b.price - a.price,
+  RATING_DESC: (a, b) => b.rating - a.rating,
+  TITLE_ASC: (a, b) => a.title.localeCompare(b.title, 'id')
+};
+
+function computeFilteredProducts(products, filters) {
+  const query = filters.searchQuery.trim().toLowerCase();
+
+  const filtered = products.filter(item => {
+    const haystack = [item.title, item.description, item.brand, item.category, formatCategoryLabel(item.category)]
+      .join(' ')
+      .toLowerCase();
+    const matchesQuery = query === '' || haystack.includes(query);
+    const matchesCategory = filters.category === 'ALL' || item.category === filters.category;
+    const matchesAvailability =
+      filters.availability === 'ALL' || getStockStatusMeta(item.stock).code === filters.availability;
+    return matchesQuery && matchesCategory && matchesAvailability;
+  });
+
+  const sorter = SORTERS[filters.sortBy];
+  return sorter ? [...filtered].sort(sorter) : filtered;
+}
+
+function computeCatalogStatistics(items, totalCount) {
+  const count = items.length;
+  if (count === 0) {
+    return { count: 0, totalCount, averagePrice: 0, mostExpensive: null, categoryCount: 0 };
+  }
+
+  const totalPrice = items.reduce((sum, item) => sum + item.price, 0);
+  const mostExpensive = items.reduce((max, item) => (item.price > max.price ? item : max), items[0]);
+  const categoryCount = new Set(items.map(item => item.category)).size;
+
+  return { count, totalCount, averagePrice: totalPrice / count, mostExpensive, categoryCount };
+}
+
+function isFilterActive(filters) {
+  return filters.searchQuery.trim() !== '' || filters.category !== 'ALL' || filters.availability !== 'ALL';
+}
+
+/* -------------------------------------------------------------------------
+   6. Validasi Form (Digit Z = 0)
+   ------------------------------------------------------------------------- */
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
+const PHONE_REGEX = /^(?:\+?62|0)8\d{7,11}$/;
+
+function findProductById(id) {
+  return appState.products.find(item => String(item.id) === String(id)) || null;
+}
+
+const FIELD_VALIDATORS = {
+  name(value) {
+    const trimmed = value.trim();
+    if (trimmed.length === 0) return 'Nama lengkap wajib diisi.';
+    if (trimmed.length < MIN_NAME_LENGTH) {
+      return `Nama lengkap minimal ${MIN_NAME_LENGTH} karakter (saat ini ${trimmed.length} karakter, spasi di awal/akhir tidak dihitung).`;
+    }
+    return '';
+  },
+
+  contact(value) {
+    const trimmed = value.trim();
+    if (trimmed.length === 0) return 'Alamat email atau nomor WhatsApp wajib diisi.';
+    if (trimmed.includes('@')) {
+      return EMAIL_REGEX.test(trimmed) ? '' : 'Format email tidak valid. Contoh yang benar: nama@email.com.';
+    }
+    const normalizedPhone = trimmed.replace(/[\s\-.()]/g, '');
+    return PHONE_REGEX.test(normalizedPhone)
+      ? ''
+      : 'Nomor WhatsApp tidak valid. Gunakan format Indonesia, contoh: 081234567890 atau +6281234567890.';
+  },
+
+  product(value) {
+    if (appState.products.length === 0) {
+      return 'Daftar produk belum tersedia. Muat ulang data produk terlebih dahulu.';
+    }
+    if (!value) return 'Silakan pilih salah satu produk dari katalog.';
+    if (!findProductById(value)) return 'Produk yang dipilih tidak ditemukan di katalog.';
+    return '';
+  },
+
+  notes(value) {
+    const trimmed = value.trim();
+    if (trimmed.length === 0) return 'Pesan atau catatan wajib diisi.';
+    if (trimmed.length < MIN_NOTES_LENGTH) {
+      return `Pesan minimal ${MIN_NOTES_LENGTH} karakter agar kebutuhan Anda jelas (saat ini ${trimmed.length} karakter).`;
+    }
+    if (trimmed.length > MAX_NOTES_LENGTH) return `Pesan maksimal ${MAX_NOTES_LENGTH} karakter.`;
+    return '';
+  }
+};
+
 function validateInquiryForm(values) {
   const errors = {};
-  const trimmedName = String(values.name || '').trim();
-  const trimmedContact = String(values.contact || '').trim();
-  const selectedProduct = String(values.product || '').trim();
-  const trimmedNotes = String(values.notes || '').trim();
-
-  if (trimmedName.length < 5) {
-    errors.name =
-      'Nama lengkap wajib minimal 5 karakter tanpa menghitung spasi di awal/akhir (saat ini ' +
-      trimmedName.length +
-      ' karakter).';
-  }
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const phoneRegex = /^[0-9+\-\s()]{8,18}$/;
-  if (!trimmedContact || (!emailRegex.test(trimmedContact) && !phoneRegex.test(trimmedContact))) {
-    errors.contact = 'Masukkan alamat email yang valid atau nomor WhatsApp/telepon (minimal 8 digit).';
-  }
-
-  if (!selectedProduct) {
-    errors.product = 'Silakan pilih salah satu varian beans atau produk dari daftar katalog.';
-  }
-
-  if (trimmedNotes.length < 10) {
-    errors.notes = 'Tuliskan rincian pertanyaan minimal 10 karakter agar kebutuhan seduhan Anda jelas.';
-  }
+  Object.keys(FIELD_VALIDATORS).forEach(field => {
+    const message = FIELD_VALIDATORS[field](String(values[field] || ''));
+    if (message) errors[field] = message;
+  });
 
   return {
     isValid: Object.keys(errors).length === 0,
     errors,
     cleaned: {
-      name: trimmedName,
-      contact: trimmedContact,
-      product: selectedProduct,
-      purpose: values.purpose,
-      notes: trimmedNotes
+      name: String(values.name || '').trim(),
+      contact: String(values.contact || '').trim(),
+      productId: String(values.product || ''),
+      purpose: String(values.purpose || ''),
+      notes: String(values.notes || '').trim()
     }
   };
 }
 
-// ==========================================================================
-// Pengelolaan DOM, State Loading/Error/Empty, Retry & Timestamp (Challenge C=1)
-// ==========================================================================
+/* -------------------------------------------------------------------------
+   7. Referensi DOM
+   ------------------------------------------------------------------------- */
 
 const dom = {};
 
 function cacheDomElements() {
-  dom.headerSearchForm = document.getElementById('header-search-form');
-  dom.headerSearchInput = document.getElementById('header-search-input');
-  dom.mobileNavToggle = document.getElementById('mobile-nav-toggle');
-  dom.primaryNav = document.getElementById('primary-navigation');
+  const byId = id => document.getElementById(id);
 
-  dom.featuredGrid = document.getElementById('featured-grid');
-  dom.featuredSourceCaption = document.getElementById('featured-source-caption');
+  Object.assign(dom, {
+    headerSearchForm: byId('header-search-form'),
+    headerSearchInput: byId('header-search-input'),
+    mobileNavToggle: byId('mobile-nav-toggle'),
+    primaryNav: byId('primary-navigation'),
+    heroProductCount: byId('hero-product-count'),
+    storeCatalogSummary: byId('store-catalog-summary'),
 
-  dom.sourceApiBtn = document.getElementById('source-api-btn');
-  dom.sourceCoffeeBtn = document.getElementById('source-coffee-btn');
-  dom.lastUpdatedText = document.getElementById('last-updated-text');
-  dom.refreshCatalogBtn = document.getElementById('refresh-catalog-btn');
-  dom.simulateErrorBtn = document.getElementById('simulate-error-btn');
-  dom.collectionContextText = document.getElementById('collection-context-text');
+    lastUpdatedBadge: byId('last-updated-badge'),
+    lastUpdatedState: byId('last-updated-state'),
+    lastUpdatedText: byId('last-updated-text'),
+    refreshBtn: byId('refresh-data-btn'),
+    loadingState: byId('loading-state'),
+    errorState: byId('error-state'),
+    errorMessage: byId('error-message'),
+    errorLastSuccess: byId('error-last-success'),
+    retryBtn: byId('retry-btn'),
 
-  dom.summaryScopeLabel = document.getElementById('summary-scope-label');
-  dom.statProductCount = document.getElementById('stat-product-count');
-  dom.statAveragePrice = document.getElementById('stat-average-price');
-  dom.statHighestProduct = document.getElementById('stat-highest-product');
-  dom.statCategoryCount = document.getElementById('stat-category-count');
+    featuredGrid: byId('featured-grid'),
 
-  dom.catalogFilterForm = document.getElementById('catalog-filter-form');
-  dom.catalogSearchInput = document.getElementById('catalog-search-input');
-  dom.categoryFilter = document.getElementById('category-filter');
-  dom.availabilityFilter = document.getElementById('availability-filter');
-  dom.sortFilter = document.getElementById('sort-filter');
-  dom.resetFilterBtn = document.getElementById('reset-filter-btn');
+    summaryScopeLabel: byId('summary-scope-label'),
+    statAveragePrice: byId('stat-average-price'),
+    statHighestProduct: byId('stat-highest-product'),
+    statHighestPrice: byId('stat-highest-price'),
+    statProductCount: byId('stat-product-count'),
+    statProductTotal: byId('stat-product-total'),
+    statCategoryCount: byId('stat-category-count'),
 
-  dom.catalogLoading = document.getElementById('catalog-loading');
-  dom.catalogError = document.getElementById('catalog-error');
-  dom.catalogErrorMessage = document.getElementById('catalog-error-message');
-  dom.errorLastUpdatedNote = document.getElementById('error-last-updated-note');
-  dom.retryFetchBtn = document.getElementById('retry-fetch-btn');
-  dom.fallbackSnapshotBtn = document.getElementById('fallback-snapshot-btn');
+    catalogFilterForm: byId('catalog-filter-form'),
+    filterFieldset: byId('filter-fieldset'),
+    catalogSearchInput: byId('catalog-search-input'),
+    categoryFilter: byId('category-filter'),
+    availabilityFilter: byId('availability-filter'),
+    sortFilter: byId('sort-filter'),
+    resetFilterBtn: byId('reset-filter-btn'),
+    catalogResultInfo: byId('catalog-result-info'),
+    catalogEmpty: byId('catalog-empty'),
+    emptyResetBtn: byId('empty-reset-btn'),
+    catalogGrid: byId('catalog-grid'),
 
-  dom.catalogEmpty = document.getElementById('catalog-empty');
-  dom.emptyResetBtn = document.getElementById('empty-reset-btn');
-  dom.catalogGrid = document.getElementById('catalog-grid');
+    inquiryForm: byId('product-inquiry-form'),
+    formErrorSummary: byId('form-error-summary'),
+    inquiryName: byId('inquiry-name'),
+    inquiryNameHint: byId('inquiry-name-hint'),
+    inquiryContact: byId('inquiry-contact'),
+    inquiryProduct: byId('inquiry-product'),
+    inquiryPurpose: byId('inquiry-purpose'),
+    inquiryNotes: byId('inquiry-notes'),
+    inquiryNotesHint: byId('inquiry-notes-hint'),
+    resetInquiryBtn: byId('reset-inquiry-btn'),
+    inquirySuccessBanner: byId('inquiry-success-banner'),
+    inquirySuccessBody: byId('inquiry-success-body'),
+    savedInquiriesList: byId('saved-inquiries-list'),
+    clearInquiriesBtn: byId('clear-inquiries-btn'),
 
-  dom.inquiryForm = document.getElementById('product-inquiry-form');
-  dom.inquiryName = document.getElementById('inquiry-name');
-  dom.inquiryNameError = document.getElementById('inquiry-name-error');
-  dom.inquiryContact = document.getElementById('inquiry-contact');
-  dom.inquiryContactError = document.getElementById('inquiry-contact-error');
-  dom.inquiryProduct = document.getElementById('inquiry-product');
-  dom.inquiryProductError = document.getElementById('inquiry-product-error');
-  dom.inquiryPurpose = document.getElementById('inquiry-purpose');
-  dom.inquiryNotes = document.getElementById('inquiry-notes');
-  dom.inquiryNotesError = document.getElementById('inquiry-notes-error');
-  dom.resetInquiryBtn = document.getElementById('reset-inquiry-btn');
-  dom.inquirySuccessBanner = document.getElementById('inquiry-success-banner');
-  dom.inquirySuccessBody = document.getElementById('inquiry-success-body');
-  dom.savedInquiriesList = document.getElementById('saved-inquiries-list');
-  dom.clearInquiriesBtn = document.getElementById('clear-inquiries-btn');
-
-  dom.productModal = document.getElementById('product-detail-modal');
-  dom.modalCloseBtn = document.getElementById('modal-close-btn');
-  dom.modalCategory = document.getElementById('modal-product-category');
-  dom.modalImageContainer = document.getElementById('modal-image-container');
-  dom.modalTitle = document.getElementById('modal-product-title');
-  dom.modalPrice = document.getElementById('modal-product-price');
-  dom.modalDescription = document.getElementById('modal-product-description');
-  dom.modalSpecs = document.getElementById('modal-product-specs');
-  dom.modalInquireBtn = document.getElementById('modal-inquire-btn');
-}
-
-function updateTimestampDisplay() {
-  const savedTimestamp = safeGetStorage(API_CONFIG.STORAGE_KEYS.LAST_SUCCESS_SYNC, null);
-  if (savedTimestamp) {
-    dom.lastUpdatedText.textContent = 'Terakhir diperbarui: ' + savedTimestamp;
-    dom.errorLastUpdatedNote.textContent =
-      'Waktu terakhir katalog berhasil dimuat: ' + savedTimestamp;
-  } else {
-    dom.lastUpdatedText.textContent = 'Terakhir diperbarui: Belum pernah dimuat';
-    dom.errorLastUpdatedNote.textContent =
-      'Waktu terakhir katalog berhasil dimuat: Belum ada riwayat pemuatan sebelumnya.';
-  }
-}
-
-function recordSuccessfulSyncTimestamp() {
-  const now = new Date();
-  const formatted = now.toLocaleString('id-ID', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
+    productModal: byId('product-detail-modal'),
+    modalCloseBtn: byId('modal-close-btn'),
+    modalCategory: byId('modal-product-category'),
+    modalImageContainer: byId('modal-image-container'),
+    modalTitle: byId('modal-product-title'),
+    modalPrice: byId('modal-product-price'),
+    modalDescription: byId('modal-product-description'),
+    modalSpecs: byId('modal-product-specs'),
+    modalInquireBtn: byId('modal-inquire-btn')
   });
-  safeSetStorage(API_CONFIG.STORAGE_KEYS.LAST_SUCCESS_SYNC, formatted);
-  updateTimestampDisplay();
+
+  // Pasangan input dan elemen pesan error untuk setiap field yang divalidasi
+  dom.formFields = {
+    name: { input: dom.inquiryName, error: byId('inquiry-name-error') },
+    contact: { input: dom.inquiryContact, error: byId('inquiry-contact-error') },
+    product: { input: dom.inquiryProduct, error: byId('inquiry-product-error') },
+    notes: { input: dom.inquiryNotes, error: byId('inquiry-notes-error') }
+  };
 }
 
-function showLoadingState() {
-  dom.catalogLoading.classList.remove('hidden');
-  dom.catalogError.classList.add('hidden');
-  dom.catalogEmpty.classList.add('hidden');
-  dom.catalogGrid.classList.add('hidden');
+/* -------------------------------------------------------------------------
+   8. Pembuat Elemen UI
+   ------------------------------------------------------------------------- */
+
+function createEl(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined && text !== null) node.textContent = text;
+  return node;
 }
 
-function showErrorState(friendlyMessage) {
-  dom.catalogLoading.classList.add('hidden');
-  dom.catalogError.classList.remove('hidden');
-  dom.catalogEmpty.classList.add('hidden');
-  dom.catalogGrid.classList.add('hidden');
-  dom.catalogErrorMessage.textContent = friendlyMessage;
-  updateTimestampDisplay();
+function createPlaceholderSvg(product) {
+  const initial = escapeXml((product.title || '?').trim().charAt(0).toUpperCase() || '?');
+  const label = escapeXml(formatCategoryLabel(product.category).slice(0, 24));
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+    <rect width="400" height="300" fill="#EFE9DC"/>
+    <circle cx="200" cy="130" r="56" fill="#1E3F2B"/>
+    <text x="200" y="150" text-anchor="middle" font-family="Georgia, serif" font-size="56" fill="#F7F3EB">${initial}</text>
+    <text x="200" y="240" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#5C4332">${label}</text>
+  </svg>`;
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 }
 
-function createProductVisualElement(product) {
+function createProductImage(product, { large = false } = {}) {
   const img = document.createElement('img');
-  img.alt = 'Kemasan produk ' + product.title;
-  img.loading = 'lazy';
-  const fallbackUri = createPackagingSvgDataUri(product);
+  img.alt = 'Foto produk ' + product.title;
+  img.loading = large ? 'eager' : 'lazy';
+  img.decoding = 'async';
+  img.width = 400;
+  img.height = 300;
 
-  if (product.thumbnail && !product.isNusantaraBean) {
-    img.src = product.thumbnail;
-    img.addEventListener('error', () => {
-      img.src = fallbackUri;
-    }, { once: true });
-  } else {
-    img.src = fallbackUri;
+  const source = large ? product.images[0] || product.thumbnail : product.thumbnail;
+  const fallback = createPlaceholderSvg(product);
+  img.src = source || fallback;
+  if (source) {
+    img.addEventListener('error', () => { img.src = fallback; }, { once: true });
   }
   return img;
 }
 
-function renderFeaturedSection(dataset) {
-  dom.featuredGrid.replaceChildren();
-  if (!dataset || dataset.length === 0) {
-    const emptyNote = document.createElement('p');
-    emptyNote.textContent = 'Pilihan beans unggulan akan tampil setelah katalog selesai dimuat.';
-    dom.featuredGrid.appendChild(emptyNote);
+function createRatingEl(rating) {
+  const wrap = createEl('span', 'product-rating');
+  const star = createEl('span', 'rating-star', '\u2605');
+  star.setAttribute('aria-hidden', 'true');
+  const srLabel = createEl('span', 'visually-hidden', 'Rating ');
+  const srSuffix = createEl('span', 'visually-hidden', ' dari 5');
+  wrap.append(star, srLabel, document.createTextNode(' ' + rating.toFixed(1)), srSuffix);
+  return wrap;
+}
+
+function createDetailButton(product, label, variant) {
+  const btn = createEl('button', `btn ${variant} btn-sm`, label);
+  btn.type = 'button';
+  btn.dataset.productId = String(product.id);
+  btn.setAttribute('aria-label', `${label}: ${product.title}`);
+  return btn;
+}
+
+function createPriceBlock(product) {
+  const wrap = createEl('div', 'product-price-wrap');
+  wrap.appendChild(createEl('span', 'product-price', formatPrice(product.price)));
+  if (product.discountPercentage > 0) {
+    wrap.appendChild(createEl('span', 'product-discount', `Diskon ${product.discountPercentage.toFixed(0)}%`));
+  }
+  return wrap;
+}
+
+function createProductCard(product) {
+  const card = createEl('article', 'product-card');
+
+  const media = createEl('div', 'product-media');
+  media.appendChild(createProductImage(product));
+
+  const body = createEl('div', 'product-body');
+
+  const metaTop = createEl('div', 'product-meta-top');
+  const stockMeta = getStockStatusMeta(product.stock);
+  metaTop.append(
+    createEl('span', 'product-category-tag', formatCategoryLabel(product.category)),
+    createEl('span', `product-stock-tag ${stockMeta.cssClass}`, stockMeta.label)
+  );
+
+  const title = createEl('h3', 'product-title', product.title);
+
+  const subMeta = createEl('div', 'product-sub-meta');
+  subMeta.appendChild(createRatingEl(product.rating));
+  if (product.brand) subMeta.appendChild(createEl('span', 'product-brand', product.brand));
+
+  const desc = createEl('p', 'product-desc', product.description);
+
+  const footer = createEl('div', 'product-footer');
+  footer.append(createPriceBlock(product), createDetailButton(product, 'Lihat Detail', 'btn-secondary'));
+
+  body.append(metaTop, title, subMeta, desc, footer);
+  card.append(media, body);
+  return card;
+}
+
+function createSkeletonCard() {
+  const card = createEl('div', 'skeleton-card');
+  card.setAttribute('aria-hidden', 'true');
+  card.appendChild(createEl('div', 'skeleton-block skeleton-media'));
+  const body = createEl('div', 'skeleton-body');
+  ['w-40', 'w-90', 'w-70', 'w-90', 'w-50'].forEach(width => {
+    body.appendChild(createEl('div', `skeleton-block skeleton-line ${width}`));
+  });
+  card.appendChild(body);
+  return card;
+}
+
+/* -------------------------------------------------------------------------
+   9. Render: State UI (Loading / Error / Success) - Challenge C = 1
+   ------------------------------------------------------------------------- */
+
+function setUiState(status) {
+  appState.status = status;
+  const isLoading = status === 'loading';
+  const hasData = appState.products.length > 0;
+
+  dom.loadingState.classList.toggle('hidden', !isLoading);
+  dom.errorState.classList.toggle('hidden', status !== 'error');
+
+  // aria-disabled (bukan disabled) agar fokus keyboard tidak hilang dari tombol
+  [dom.retryBtn, dom.refreshBtn].forEach(btn => btn.setAttribute('aria-disabled', String(isLoading)));
+  dom.retryBtn.textContent = isLoading ? 'Memuat\u2026' : 'Coba Lagi';
+  dom.refreshBtn.textContent = isLoading ? 'Memuat\u2026' : 'Segarkan Katalog';
+
+  dom.catalogGrid.setAttribute('aria-busy', String(isLoading));
+  dom.filterFieldset.disabled = !hasData;
+  dom.inquiryProduct.disabled = !hasData;
+
+  if (!hasData) {
+    renderNoDataState(isLoading);
+  }
+
+  if (status === 'error') {
+    dom.errorMessage.textContent = appState.errorMessage;
+    dom.errorLastSuccess.textContent = buildLastSuccessSentence(hasData);
+  }
+
+  renderTimestampBadge();
+  renderHeroBadge();
+}
+
+function buildLastSuccessSentence(hasData) {
+  if (!appState.lastSuccessAt) {
+    return 'Data produk belum pernah berhasil dimuat di perangkat ini.';
+  }
+  const base = `Pembaruan stok terakhir berhasil: ${formatTimestampWITA(appState.lastSuccessAt)}.`;
+  return hasData ? `${base} Katalog di bawah masih menampilkan data dari pemuatan tersebut.` : base;
+}
+
+function renderTimestampBadge() {
+  const STATE_LABELS = { idle: 'Menyiapkan', loading: 'Memuat', success: 'Berhasil', error: 'Gagal' };
+  dom.lastUpdatedBadge.dataset.state = appState.status;
+  dom.lastUpdatedState.textContent = STATE_LABELS[appState.status] || '';
+
+  dom.lastUpdatedText.replaceChildren();
+  if (!appState.lastSuccessAt) {
+    dom.lastUpdatedText.textContent = 'Pembaruan Stok Terakhir: Belum pernah dimuat';
+    return;
+  }
+  const time = createEl('time', '', formatTimestampWITA(appState.lastSuccessAt));
+  time.dateTime = appState.lastSuccessAt.toISOString();
+  dom.lastUpdatedText.append('Pembaruan Stok Terakhir: ', time);
+}
+
+function renderHeroBadge() {
+  const { status, products } = appState;
+  if (products.length > 0) {
+    const categoryCount = new Set(products.map(item => item.category)).size;
+    const summaryText = `${products.length} produk \u00b7 ${categoryCount} kategori`;
+    if (dom.heroProductCount) {
+      dom.heroProductCount.textContent = summaryText;
+    }
+    if (dom.storeCatalogSummary) {
+      dom.storeCatalogSummary.textContent = summaryText;
+    }
+  } else if (status === 'error') {
+    if (dom.heroProductCount) {
+      dom.heroProductCount.textContent = 'Data belum tersedia';
+    }
+    if (dom.storeCatalogSummary) {
+      dom.storeCatalogSummary.textContent = 'Data belum tersedia';
+    }
+  } else {
+    if (dom.heroProductCount) {
+      dom.heroProductCount.textContent = 'Memuat produk\u2026';
+    }
+    if (dom.storeCatalogSummary) {
+      dom.storeCatalogSummary.textContent = 'Memuat katalog\u2026';
+    }
+  }
+}
+
+function renderNoDataState(isLoading) {
+  dom.catalogEmpty.classList.add('hidden');
+  dom.catalogGrid.classList.remove('hidden');
+
+  if (isLoading) {
+    const fragment = document.createDocumentFragment();
+    for (let i = 0; i < SKELETON_CARD_COUNT; i += 1) fragment.appendChild(createSkeletonCard());
+    dom.catalogGrid.replaceChildren(fragment);
+    renderFeaturedSkeleton();
+    renderStatsPlaceholder('\u2026');
+    dom.catalogResultInfo.textContent = 'Memuat produk dari DummyJSON\u2026';
+    setProductSelectPlaceholder('Memuat daftar produk\u2026');
     return;
   }
 
-  const isNusantara = appState.activeSource === 'coffee_nusantara';
-  const topThree = [...dataset]
-    .sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0))
-    .slice(0, 3);
+  // Gagal dan belum ada data sama sekali
+  const box = createEl('div', 'grid-unavailable');
+  box.appendChild(createEl('p', 'grid-unavailable-text', 'Katalog belum dapat ditampilkan karena data produk gagal dimuat.'));
+  const retryInline = createEl('button', 'btn btn-retry btn-sm', 'Coba Lagi');
+  retryInline.type = 'button';
+  retryInline.id = 'retry-inline-btn';
+  retryInline.addEventListener('click', handleRetryClick);
+  box.appendChild(retryInline);
+  dom.catalogGrid.replaceChildren(box);
 
-  const primaryItem = topThree[0];
-  const secondaryItems = topThree.slice(1);
-
-  if (primaryItem) {
-    const primaryCard = document.createElement('article');
-    primaryCard.className = 'featured-primary-card';
-
-    const mediaDiv = document.createElement('div');
-    mediaDiv.className = 'product-media';
-    mediaDiv.appendChild(createProductVisualElement(primaryItem));
-
-    const contentDiv = document.createElement('div');
-    const stockMeta = getStockStatusMeta(primaryItem.stock);
-
-    const topMeta = document.createElement('div');
-    topMeta.className = 'product-meta-top';
-
-    const catBadge = document.createElement('span');
-    catBadge.className = 'product-category-tag';
-    catBadge.textContent = formatCategoryLabel(primaryItem.category);
-
-    const stockBadge = document.createElement('span');
-    stockBadge.className = 'product-stock-tag ' + stockMeta.cssClass;
-    stockBadge.textContent = stockMeta.label;
-
-    topMeta.append(catBadge, stockBadge);
-
-    const titleEl = document.createElement('h3');
-    titleEl.className = 'product-title';
-    titleEl.textContent = primaryItem.title;
-
-    const descEl = document.createElement('p');
-    descEl.className = 'product-desc';
-    descEl.textContent = primaryItem.description;
-
-    const footerDiv = document.createElement('div');
-    footerDiv.className = 'product-footer';
-
-    const priceEl = document.createElement('span');
-    priceEl.className = 'product-price';
-    priceEl.textContent = formatPriceBySource(primaryItem.price, isNusantara);
-
-    const detailBtn = document.createElement('button');
-    detailBtn.type = 'button';
-    detailBtn.className = 'btn btn-primary';
-    detailBtn.textContent = 'Lihat Rincian Beans';
-    detailBtn.addEventListener('click', () => openProductModal(primaryItem.id));
-
-    footerDiv.append(priceEl, detailBtn);
-    contentDiv.append(topMeta, titleEl, descEl, footerDiv);
-    primaryCard.append(mediaDiv, contentDiv);
-    dom.featuredGrid.appendChild(primaryCard);
-  }
-
-  if (secondaryItems.length > 0) {
-    const sideStack = document.createElement('div');
-    sideStack.className = 'featured-side-stack';
-
-    secondaryItems.forEach(item => {
-      const card = document.createElement('article');
-      card.className = 'featured-secondary-card';
-
-      const stockMeta = getStockStatusMeta(item.stock);
-      const topMeta = document.createElement('div');
-      topMeta.className = 'product-meta-top';
-
-      const catBadge = document.createElement('span');
-      catBadge.className = 'product-category-tag';
-      catBadge.textContent = formatCategoryLabel(item.category);
-
-      const stockBadge = document.createElement('span');
-      stockBadge.className = 'product-stock-tag ' + stockMeta.cssClass;
-      stockBadge.textContent = stockMeta.label;
-
-      topMeta.append(catBadge, stockBadge);
-
-      const titleEl = document.createElement('h3');
-      titleEl.className = 'product-title';
-      titleEl.textContent = item.title;
-
-      const descEl = document.createElement('p');
-      descEl.className = 'product-desc';
-      descEl.textContent = item.description;
-
-      const footerDiv = document.createElement('div');
-      footerDiv.className = 'product-footer';
-
-      const priceEl = document.createElement('span');
-      priceEl.className = 'product-price';
-      priceEl.textContent = formatPriceBySource(item.price, isNusantara);
-
-      const detailBtn = document.createElement('button');
-      detailBtn.type = 'button';
-      detailBtn.className = 'btn btn-secondary';
-      detailBtn.textContent = 'Rincian Produk';
-      detailBtn.addEventListener('click', () => openProductModal(item.id));
-
-      footerDiv.append(priceEl, detailBtn);
-      card.append(topMeta, titleEl, descEl, footerDiv);
-      sideStack.appendChild(card);
-    });
-
-    dom.featuredGrid.appendChild(sideStack);
-  }
+  dom.featuredGrid.replaceChildren(
+    createEl('p', 'featured-empty-note', 'Produk pilihan akan tampil setelah data berhasil dimuat.')
+  );
+  renderStatsPlaceholder('\u2013');
+  dom.catalogResultInfo.textContent = 'Data produk belum tersedia.';
+  setProductSelectPlaceholder('Daftar produk belum tersedia');
 }
 
-function populateCategoryAndProductSelects(dataset) {
-  const isNusantara = appState.activeSource === 'coffee_nusantara';
-  const categories = Array.from(new Set(dataset.map(item => item.category)));
+function renderStatsPlaceholder(symbol) {
+  dom.statAveragePrice.textContent = symbol;
+  dom.statHighestProduct.textContent = symbol;
+  dom.statHighestPrice.textContent = symbol;
+  dom.statProductCount.textContent = symbol;
+  dom.statProductTotal.textContent = `dari ${symbol} produk`;
+  dom.statCategoryCount.textContent = symbol;
+}
 
-  dom.categoryFilter.replaceChildren();
-  const allOption = document.createElement('option');
-  allOption.value = 'ALL';
-  allOption.textContent = 'Semua Kategori (' + categories.length + ')';
-  dom.categoryFilter.appendChild(allOption);
+/* -------------------------------------------------------------------------
+   10. Render: Produk Pilihan, Katalog, Statistik
+   ------------------------------------------------------------------------- */
 
-  categories.forEach(cat => {
-    const opt = document.createElement('option');
-    opt.value = cat;
-    opt.textContent = formatCategoryLabel(cat);
-    dom.categoryFilter.appendChild(opt);
-  });
+function renderFeaturedSkeleton() {
+  const primary = createEl('div', 'skeleton-card skeleton-featured');
+  primary.setAttribute('aria-hidden', 'true');
+  primary.append(createEl('div', 'skeleton-block skeleton-media'), createSkeletonCard().lastChild);
 
-  const currentSelected = dom.inquiryProduct.value;
-  dom.inquiryProduct.replaceChildren();
-  const placeholderOpt = document.createElement('option');
-  placeholderOpt.value = '';
-  placeholderOpt.textContent = 'Pilih varian beans / produk dari katalog...';
-  dom.inquiryProduct.appendChild(placeholderOpt);
+  const side = createEl('div', 'featured-side-stack');
+  side.append(createSkeletonCard(), createSkeletonCard());
+  dom.featuredGrid.replaceChildren(primary, side);
+}
 
-  dataset.forEach(item => {
-    const opt = document.createElement('option');
-    opt.value = item.title;
-    opt.textContent = item.title + ' (' + formatPriceBySource(item.price, isNusantara) + ')';
-    dom.inquiryProduct.appendChild(opt);
-  });
-
-  if (currentSelected) {
-    dom.inquiryProduct.value = currentSelected;
+function renderFeaturedSection(products) {
+  const topThree = [...products].sort((a, b) => b.rating - a.rating).slice(0, 3);
+  if (topThree.length === 0) {
+    dom.featuredGrid.replaceChildren(createEl('p', 'featured-empty-note', 'Belum ada produk untuk ditampilkan.'));
+    return;
   }
+
+  const [primaryItem, ...secondaryItems] = topThree;
+
+  // Kartu utama
+  const primaryCard = createEl('article', 'featured-primary-card');
+  const primaryMedia = createEl('div', 'product-media');
+  primaryMedia.appendChild(createProductImage(primaryItem, { large: true }));
+
+  const primaryContent = createEl('div', 'featured-content');
+  const primaryMeta = createEl('div', 'product-meta-top');
+  primaryMeta.append(
+    createEl('span', 'product-category-tag', formatCategoryLabel(primaryItem.category)),
+    createRatingEl(primaryItem.rating)
+  );
+  const primaryFooter = createEl('div', 'product-footer');
+  primaryFooter.append(createPriceBlock(primaryItem), createDetailButton(primaryItem, 'Lihat Rincian', 'btn-primary'));
+  primaryContent.append(
+    primaryMeta,
+    createEl('h3', 'product-title featured-title', primaryItem.title),
+    createEl('p', 'product-desc', primaryItem.description),
+    primaryFooter
+  );
+  primaryCard.append(primaryMedia, primaryContent);
+
+  // Kartu sekunder
+  const sideStack = createEl('div', 'featured-side-stack');
+  secondaryItems.forEach(item => {
+    const card = createEl('article', 'featured-secondary-card');
+    const thumb = createEl('div', 'featured-thumb');
+    thumb.appendChild(createProductImage(item));
+
+    const content = createEl('div', 'featured-secondary-content');
+    const meta = createEl('div', 'product-meta-top');
+    meta.append(createEl('span', 'product-category-tag', formatCategoryLabel(item.category)), createRatingEl(item.rating));
+    const footer = createEl('div', 'product-footer');
+    footer.append(createPriceBlock(item), createDetailButton(item, 'Rincian', 'btn-secondary'));
+    content.append(meta, createEl('h3', 'product-title', item.title), footer);
+
+    card.append(thumb, content);
+    sideStack.appendChild(card);
+  });
+
+  dom.featuredGrid.replaceChildren(primaryCard, sideStack);
+}
+
+function renderStatistics(stats, filterActive) {
+  dom.summaryScopeLabel.textContent = filterActive ? 'Cakupan: Hasil Filter Aktif' : 'Cakupan: Seluruh Katalog';
+  dom.summaryScopeLabel.dataset.active = String(filterActive);
+
+  dom.statProductCount.textContent = String(stats.count);
+  dom.statProductTotal.textContent = `dari ${stats.totalCount} produk`;
+
+  if (stats.count === 0) {
+    dom.statAveragePrice.textContent = formatPrice(0);
+    dom.statHighestProduct.textContent = 'Tidak ada produk';
+    dom.statHighestPrice.textContent = '\u2013';
+    dom.statCategoryCount.textContent = '0';
+    return;
+  }
+
+  dom.statAveragePrice.textContent = formatPrice(stats.averagePrice);
+  dom.statHighestProduct.textContent = stats.mostExpensive.title;
+  dom.statHighestPrice.textContent = formatPrice(stats.mostExpensive.price);
+  dom.statCategoryCount.textContent = String(stats.categoryCount);
 }
 
 function renderCatalogAndStats() {
-  const dataset = appState.activeDataset;
-  const isNusantara = appState.activeSource === 'coffee_nusantara';
-  const filtered = computeFilteredProducts(dataset, appState.filters);
+  const { products, filters } = appState;
+  if (products.length === 0) return;
+
+  const filtered = computeFilteredProducts(products, filters);
   appState.filteredProducts = filtered;
 
-  const isFiltered =
-    appState.filters.searchQuery.trim() !== '' ||
-    appState.filters.category !== 'ALL' ||
-    appState.filters.availability !== 'ALL';
-
-  dom.summaryScopeLabel.textContent = isFiltered
-    ? 'Cakupan: Hasil Penyaringan Aktif'
-    : 'Cakupan: Seluruh Katalog Aktif';
-
-  const stats = computeCatalogStatistics(filtered, dataset);
-  dom.statProductCount.textContent = stats.countText;
-  dom.statAveragePrice.textContent = stats.averagePriceText;
-  dom.statHighestProduct.textContent = stats.highestProductText;
-  dom.statCategoryCount.textContent = stats.categoryCountText;
-
-  dom.catalogLoading.classList.add('hidden');
-  dom.catalogError.classList.add('hidden');
+  renderStatistics(computeCatalogStatistics(filtered, products.length), isFilterActive(filters));
+  dom.catalogResultInfo.textContent = `Menampilkan ${filtered.length} dari ${products.length} produk.`;
 
   if (filtered.length === 0) {
     dom.catalogEmpty.classList.remove('hidden');
     dom.catalogGrid.classList.add('hidden');
+    dom.catalogGrid.replaceChildren();
     return;
   }
 
   dom.catalogEmpty.classList.add('hidden');
   dom.catalogGrid.classList.remove('hidden');
-  dom.catalogGrid.replaceChildren();
 
-  filtered.forEach(product => {
-    const card = document.createElement('article');
-    card.className = 'product-card';
-
-    const mediaDiv = document.createElement('div');
-    mediaDiv.className = 'product-media';
-    mediaDiv.appendChild(createProductVisualElement(product));
-
-    const bodyDiv = document.createElement('div');
-    bodyDiv.className = 'product-body';
-
-    const metaTop = document.createElement('div');
-    metaTop.className = 'product-meta-top';
-
-    const catTag = document.createElement('span');
-    catTag.className = 'product-category-tag';
-    catTag.textContent = formatCategoryLabel(product.category);
-
-    const stockMeta = getStockStatusMeta(product.stock);
-    const stockTag = document.createElement('span');
-    stockTag.className = 'product-stock-tag ' + stockMeta.cssClass;
-    stockTag.textContent = stockMeta.label;
-
-    metaTop.append(catTag, stockTag);
-
-    const titleEl = document.createElement('h3');
-    titleEl.className = 'product-title';
-    titleEl.textContent = product.title;
-
-    const descEl = document.createElement('p');
-    descEl.className = 'product-desc';
-    descEl.textContent = product.description;
-
-    const footerDiv = document.createElement('div');
-    footerDiv.className = 'product-footer';
-
-    const priceEl = document.createElement('span');
-    priceEl.className = 'product-price';
-    priceEl.textContent = formatPriceBySource(product.price, isNusantara);
-
-    const detailBtn = document.createElement('button');
-    detailBtn.type = 'button';
-    detailBtn.className = 'btn btn-secondary';
-    detailBtn.textContent = 'Lihat Detail';
-    detailBtn.addEventListener('click', () => openProductModal(product.id));
-
-    footerDiv.append(priceEl, detailBtn);
-    bodyDiv.append(metaTop, titleEl, descEl, footerDiv);
-    card.append(mediaDiv, bodyDiv);
-    dom.catalogGrid.appendChild(card);
-  });
+  const fragment = document.createDocumentFragment();
+  filtered.forEach(product => fragment.appendChild(createProductCard(product)));
+  dom.catalogGrid.replaceChildren(fragment);
 }
 
-// Pencarian item spesifik dengan Array.prototype.find() untuk Modal Detail
+/* -------------------------------------------------------------------------
+   11. Render: Pilihan Dropdown
+   ------------------------------------------------------------------------- */
+
+function populateCategoryFilter(products) {
+  const countByCategory = products.reduce((acc, item) => {
+    acc[item.category] = (acc[item.category] || 0) + 1;
+    return acc;
+  }, {});
+
+  const categories = Object.keys(countByCategory).sort((a, b) =>
+    formatCategoryLabel(a).localeCompare(formatCategoryLabel(b), 'id')
+  );
+
+  const options = [
+    new Option(`Semua Kategori (${categories.length})`, 'ALL'),
+    ...categories.map(cat => new Option(`${formatCategoryLabel(cat)} (${countByCategory[cat]})`, cat))
+  ];
+  dom.categoryFilter.replaceChildren(...options);
+
+  if (!categories.includes(appState.filters.category)) appState.filters.category = 'ALL';
+  dom.categoryFilter.value = appState.filters.category;
+}
+
+function populateProductSelect(products) {
+  const previous = dom.inquiryProduct.value;
+  const sorted = [...products].sort((a, b) => a.title.localeCompare(b.title, 'id'));
+
+  const options = [
+    new Option('Pilih produk dari katalog\u2026', ''),
+    ...sorted.map(item => new Option(`${item.title} (${formatPrice(item.price)})`, String(item.id)))
+  ];
+  dom.inquiryProduct.replaceChildren(...options);
+  if (previous && findProductById(previous)) dom.inquiryProduct.value = previous;
+}
+
+function setProductSelectPlaceholder(text) {
+  dom.inquiryProduct.replaceChildren(new Option(text, ''));
+}
+
+/* -------------------------------------------------------------------------
+   12. Modal Detail Produk
+   ------------------------------------------------------------------------- */
+
 function openProductModal(productId) {
-  const product = appState.activeDataset.find(item => Number(item.id) === Number(productId));
+  const product = findProductById(productId);
   if (!product) return;
 
-  const isNusantara = appState.activeSource === 'coffee_nusantara';
   appState.selectedModalProduct = product;
   dom.modalCategory.textContent = formatCategoryLabel(product.category);
   dom.modalTitle.textContent = product.title;
-  dom.modalPrice.textContent = formatPriceBySource(product.price, isNusantara);
+  dom.modalPrice.textContent = formatPrice(product.price);
   dom.modalDescription.textContent = product.description;
-
-  dom.modalImageContainer.replaceChildren();
-  dom.modalImageContainer.appendChild(createProductVisualElement(product));
+  dom.modalImageContainer.replaceChildren(createProductImage(product, { large: true }));
 
   const stockMeta = getStockStatusMeta(product.stock);
-  const specs = isNusantara
-    ? [
-        ['Daerah Asal', product.originRegion || 'Nusantara'],
-        ['Profil Sangrai', product.roastLevel || 'Medium'],
-        ['Status Stok', stockMeta.label],
-        ['Kode Produk', product.sku || 'RNM-' + product.id]
-      ]
-    : [
-        ['Merek Produk', product.brand || 'Mitra Katalog'],
-        ['Kode SKU', product.sku || 'API-' + product.id],
-        ['Status Stok', stockMeta.label],
-        ['Penilaian', (Number(product.rating) || 0).toFixed(2) + ' / 5.00']
-      ];
+  const specs = [
+    ['Merek', product.brand || 'Tidak disebutkan'],
+    ['Rating', `${product.rating.toFixed(1)} dari 5`],
+    ['Ketersediaan', `${stockMeta.label} (${product.stock} unit)`],
+    ['Diskon', product.discountPercentage > 0 ? `${product.discountPercentage.toFixed(1)}%` : 'Tidak ada'],
+    ['Kode SKU', product.sku || `ID-${product.id}`],
+    ['Kategori', formatCategoryLabel(product.category)]
+  ];
 
-  dom.modalSpecs.replaceChildren();
-  specs.forEach(([label, val]) => {
-    const wrap = document.createElement('div');
-    const dt = document.createElement('dt');
-    dt.textContent = label;
-    const dd = document.createElement('dd');
-    dd.textContent = val;
-    wrap.append(dt, dd);
-    dom.modalSpecs.appendChild(wrap);
-  });
+  dom.modalSpecs.replaceChildren(
+    ...specs.map(([label, value]) => {
+      const row = createEl('div', 'modal-spec-row');
+      row.append(createEl('dt', '', label), createEl('dd', '', value));
+      return row;
+    })
+  );
 
   if (typeof dom.productModal.showModal === 'function') {
     dom.productModal.showModal();
   } else {
-    dom.productModal.setAttribute('open', 'open');
+    dom.productModal.setAttribute('open', '');
   }
 }
 
@@ -952,13 +896,143 @@ function closeProductModal() {
   }
 }
 
-function resetAllFilters() {
-  appState.filters = {
-    searchQuery: '',
-    category: 'ALL',
-    availability: 'ALL',
-    sortBy: 'DEFAULT'
+/* -------------------------------------------------------------------------
+   13. Form: Tampilan Error, Hint, Riwayat
+   ------------------------------------------------------------------------- */
+
+function setFieldError(field, message) {
+  const { input, error } = dom.formFields[field];
+  if (message) {
+    input.setAttribute('aria-invalid', 'true');
+    error.textContent = message;
+    error.classList.remove('hidden');
+  } else {
+    input.removeAttribute('aria-invalid');
+    error.textContent = '';
+    error.classList.add('hidden');
+  }
+}
+
+function validateSingleField(field) {
+  const message = FIELD_VALIDATORS[field](String(dom.formFields[field].input.value || ''));
+  setFieldError(field, message);
+  return message;
+}
+
+function clearFormErrors() {
+  Object.keys(dom.formFields).forEach(field => setFieldError(field, ''));
+  dom.formErrorSummary.classList.add('hidden');
+  dom.formErrorSummary.textContent = '';
+}
+
+function updateFieldHints() {
+  const nameLength = dom.inquiryName.value.trim().length;
+  dom.inquiryNameHint.textContent =
+    `Minimal ${MIN_NAME_LENGTH} karakter (spasi di awal/akhir tidak dihitung). Terisi: ${nameLength}/${MIN_NAME_LENGTH}.`;
+  dom.inquiryNameHint.classList.toggle('hint-ok', nameLength >= MIN_NAME_LENGTH);
+
+  const notesLength = dom.inquiryNotes.value.trim().length;
+  dom.inquiryNotesHint.textContent =
+    `${notesLength}/${MAX_NOTES_LENGTH} karakter (minimal ${MIN_NOTES_LENGTH} karakter).`;
+  dom.inquiryNotesHint.classList.toggle('hint-ok', notesLength >= MIN_NOTES_LENGTH);
+}
+
+function renderSavedInquiries() {
+  const saved = safeGetStorage(STORAGE_KEYS.SAVED_INQUIRIES, []);
+
+  if (!Array.isArray(saved) || saved.length === 0) {
+    dom.savedInquiriesList.replaceChildren(
+      createEl('li', 'saved-inquiry-empty', 'Belum ada pertanyaan yang disimpan.')
+    );
+    return;
+  }
+
+  dom.savedInquiriesList.replaceChildren(
+    ...saved.map(entry => {
+      const li = createEl('li', 'saved-inquiry-item');
+      li.append(
+        createEl('strong', 'saved-inquiry-name', `${entry.name} \u2014 ${entry.purpose || 'Pertanyaan Umum'}`),
+        createEl('span', 'saved-inquiry-meta', `Produk: ${entry.productTitle || entry.product || '-'} \u00b7 ${entry.createdAt}`),
+        createEl('span', 'saved-inquiry-notes', `Pesan: ${entry.notes}`)
+      );
+      return li;
+    })
+  );
+}
+
+function handleInquirySubmit(event) {
+  event.preventDefault();
+  clearFormErrors();
+  dom.inquirySuccessBanner.classList.add('hidden');
+
+  const result = validateInquiryForm({
+    name: dom.inquiryName.value,
+    contact: dom.inquiryContact.value,
+    product: dom.inquiryProduct.value,
+    purpose: dom.inquiryPurpose.value,
+    notes: dom.inquiryNotes.value
+  });
+
+  if (!result.isValid) {
+    const invalidFields = Object.keys(result.errors);
+    invalidFields.forEach(field => setFieldError(field, result.errors[field]));
+
+    dom.formErrorSummary.textContent =
+      `Formulir belum dapat dikirim: ${invalidFields.length} isian perlu diperbaiki. Lihat pesan di bawah setiap kolom.`;
+    dom.formErrorSummary.classList.remove('hidden');
+
+    const firstFocusable = invalidFields
+      .map(field => dom.formFields[field].input)
+      .find(input => !input.disabled);
+    (firstFocusable || dom.formErrorSummary).focus();
+    return;
+  }
+
+  const product = findProductById(result.cleaned.productId);
+  const record = {
+    name: result.cleaned.name,
+    contact: result.cleaned.contact,
+    productId: result.cleaned.productId,
+    productTitle: product ? product.title : '-',
+    purpose: result.cleaned.purpose,
+    notes: result.cleaned.notes,
+    createdAt: formatTimestampWITA(new Date())
   };
+
+  const existing = safeGetStorage(STORAGE_KEYS.SAVED_INQUIRIES, []);
+  const updated = [record, ...(Array.isArray(existing) ? existing : [])].slice(0, 10);
+  safeSetStorage(STORAGE_KEYS.SAVED_INQUIRIES, updated);
+  renderSavedInquiries();
+
+  dom.inquirySuccessBody.textContent =
+    `Terima kasih, ${record.name}. Pertanyaan Anda tentang "${record.productTitle}" (${record.purpose}) ` +
+    `telah tercatat pada ${record.createdAt} dan tersimpan di riwayat perangkat ini. ` +
+    `Tim Ranum akan menghubungi Anda melalui ${record.contact}.`;
+
+  dom.inquiryForm.reset();
+  updateFieldHints();
+  dom.inquirySuccessBanner.classList.remove('hidden');
+  dom.inquirySuccessBanner.focus();
+}
+
+/* -------------------------------------------------------------------------
+   14. Event Handler
+   ------------------------------------------------------------------------- */
+
+function handleRetryClick(event) {
+  if (event && event.currentTarget && event.currentTarget.getAttribute('aria-disabled') === 'true') return;
+  loadProducts().then(() => {
+    if (appState.status === 'error') dom.errorState.focus();
+  });
+}
+
+function applyFilters(partialFilters) {
+  appState.filters = { ...appState.filters, ...partialFilters };
+  renderCatalogAndStats();
+}
+
+function resetAllFilters() {
+  appState.filters = { ...DEFAULT_FILTERS };
   dom.catalogSearchInput.value = '';
   dom.headerSearchInput.value = '';
   dom.categoryFilter.value = 'ALL';
@@ -967,315 +1041,109 @@ function resetAllFilters() {
   renderCatalogAndStats();
 }
 
-function activateDataset(dataset, sourceType, contextNotice) {
-  appState.activeSource = sourceType;
-  appState.activeDataset = dataset;
-
-  const isNusantara = sourceType === 'coffee_nusantara';
-  dom.sourceCoffeeBtn.classList.toggle('active', isNusantara);
-  dom.sourceCoffeeBtn.setAttribute('aria-pressed', String(isNusantara));
-  dom.sourceApiBtn.classList.toggle('active', !isNusantara);
-  dom.sourceApiBtn.setAttribute('aria-pressed', String(!isNusantara));
-
-  dom.collectionContextText.textContent = contextNotice;
-  dom.featuredSourceCaption.textContent = isNusantara
-    ? 'Tiga varian biji kopi Nusantara pilihan dari roastery Ranum.'
-    : 'Tiga produk dengan penilaian tertinggi dari Katalog Mitra REST API (https://dummyjson.com/products).';
-
-  populateCategoryAndProductSelects(dataset);
-  resetAllFilters();
-  renderFeaturedSection(dataset);
+function handleDetailButtonClick(event) {
+  const trigger = event.target.closest('[data-product-id]');
+  if (trigger) openProductModal(trigger.dataset.productId);
 }
 
-// Memuat data dari endpoint wajib https://dummyjson.com/products dengan async/await
-async function loadApiCatalog(forceErrorSimulation = false, switchViewToApi = true) {
-  showLoadingState();
-  const targetUrl = forceErrorSimulation
-    ? API_CONFIG.BrokenEndpointForTest
-    : API_CONFIG.PRIMARY_ENDPOINT;
-
-  try {
-    const products = await fetchProductsFromApi(targetUrl);
-    appState.apiProducts = products;
-    recordSuccessfulSyncTimestamp();
-
-    if (switchViewToApi) {
-      activateDataset(
-        products,
-        'api',
-        'Menampilkan ' +
-          products.length +
-          ' produk langsung dari endpoint REST API https://dummyjson.com/products.'
-      );
-    } else {
-      activateDataset(
-        NUSANTARA_BEANS_CATALOG,
-        'coffee_nusantara',
-        'Menampilkan 12 varian biji kopi Nusantara dari UMKM Ranum (Sinkronisasi REST API berhasil).'
-      );
-    }
-  } catch (error) {
-    if (switchViewToApi || forceErrorSimulation) {
-      showErrorState(
-        'Katalog belum dapat dimuat dari server (' +
-          error.message +
-          '). Waktu pemuatan terakhir yang berhasil tetap disimpan. Silakan klik "Coba Lagi" atau kembali ke Koleksi Beans Nusantara.'
-      );
-    } else {
-      // Pada saat halaman baru dibuka tanpa internet, tetap tampilkan koleksi Beans Nusantara Ranum
-      recordSuccessfulSyncTimestamp();
-      activateDataset(
-        NUSANTARA_BEANS_CATALOG,
-        'coffee_nusantara',
-        'Menampilkan 12 varian biji kopi Nusantara dari UMKM Ranum (Aceh Gayo, Mandheling, Lintong, Kintamani, Preanger, Ijen, Toraja, Flores, Papua, dan Robusta).'
-      );
-    }
-  }
-}
-
-function renderSavedInquiries() {
-  const saved = safeGetStorage(API_CONFIG.STORAGE_KEYS.SAVED_INQUIRIES, []);
-  dom.savedInquiriesList.replaceChildren();
-
-  if (!Array.isArray(saved) || saved.length === 0) {
-    const emptyLi = document.createElement('li');
-    emptyLi.className = 'saved-inquiry-empty';
-    emptyLi.textContent = 'Belum ada permintaan informasi yang disimpan.';
-    dom.savedInquiriesList.appendChild(emptyLi);
-    return;
-  }
-
-  saved.forEach(entry => {
-    const li = document.createElement('li');
-    li.className = 'saved-inquiry-item';
-
-    const headerStrong = document.createElement('strong');
-    headerStrong.textContent = entry.name + ' (' + entry.purpose + ')';
-
-    const metaSpan = document.createElement('div');
-    metaSpan.textContent = 'Produk: ' + entry.product + ' | Waktu: ' + entry.createdAt;
-
-    const noteP = document.createElement('div');
-    noteP.textContent = 'Pesan: ' + entry.notes;
-
-    li.append(headerStrong, metaSpan, noteP);
-    dom.savedInquiriesList.appendChild(li);
-  });
-}
-
-function setFieldError(inputEl, errorEl, message) {
-  if (message) {
-    inputEl.setAttribute('aria-invalid', 'true');
-    errorEl.textContent = message;
-    errorEl.classList.remove('hidden');
-  } else {
-    inputEl.removeAttribute('aria-invalid');
-    errorEl.textContent = '';
-    errorEl.classList.add('hidden');
-  }
-}
-
-function clearFormErrors() {
-  setFieldError(dom.inquiryName, dom.inquiryNameError, '');
-  setFieldError(dom.inquiryContact, dom.inquiryContactError, '');
-  setFieldError(dom.inquiryProduct, dom.inquiryProductError, '');
-  setFieldError(dom.inquiryNotes, dom.inquiryNotesError, '');
+function closeMobileNav() {
+  dom.primaryNav.classList.remove('is-open');
+  dom.mobileNavToggle.setAttribute('aria-expanded', 'false');
 }
 
 function bindEvents() {
+  // Navigasi mobile
   dom.mobileNavToggle.addEventListener('click', () => {
     const isOpen = dom.primaryNav.classList.toggle('is-open');
     dom.mobileNavToggle.setAttribute('aria-expanded', String(isOpen));
   });
+  dom.primaryNav.addEventListener('click', event => {
+    if (event.target.closest('a')) closeMobileNav();
+  });
 
+  // State UI: Retry & muat ulang
+  dom.retryBtn.addEventListener('click', handleRetryClick);
+  dom.refreshBtn.addEventListener('click', handleRetryClick);
+
+  // Pencarian header disinkronkan dengan pencarian katalog
   dom.headerSearchForm.addEventListener('submit', event => {
     event.preventDefault();
     const query = dom.headerSearchInput.value;
     dom.catalogSearchInput.value = query;
-    appState.filters.searchQuery = query;
-    renderCatalogAndStats();
-    const catalogEl = document.getElementById('katalog');
-    if (catalogEl) {
-      catalogEl.scrollIntoView({ behavior: 'smooth' });
-    }
+    applyFilters({ searchQuery: query });
+    document.getElementById('katalog').scrollIntoView({ behavior: 'smooth' });
   });
 
-  dom.catalogFilterForm.addEventListener('submit', event => {
-    event.preventDefault();
-  });
-
+  // Filter katalog
+  dom.catalogFilterForm.addEventListener('submit', event => event.preventDefault());
   dom.catalogSearchInput.addEventListener('input', event => {
-    const val = event.target.value;
-    dom.headerSearchInput.value = val;
-    appState.filters.searchQuery = val;
-    renderCatalogAndStats();
+    dom.headerSearchInput.value = event.target.value;
+    applyFilters({ searchQuery: event.target.value });
   });
+  dom.categoryFilter.addEventListener('change', event => applyFilters({ category: event.target.value }));
+  dom.availabilityFilter.addEventListener('change', event => applyFilters({ availability: event.target.value }));
+  dom.sortFilter.addEventListener('change', event => applyFilters({ sortBy: event.target.value }));
+  dom.resetFilterBtn.addEventListener('click', resetAllFilters);
+  dom.emptyResetBtn.addEventListener('click', resetAllFilters);
 
-  dom.categoryFilter.addEventListener('change', event => {
-    appState.filters.category = event.target.value;
-    renderCatalogAndStats();
-  });
+  // Tombol detail produk (event delegation)
+  dom.catalogGrid.addEventListener('click', handleDetailButtonClick);
+  dom.featuredGrid.addEventListener('click', handleDetailButtonClick);
 
-  dom.availabilityFilter.addEventListener('change', event => {
-    appState.filters.availability = event.target.value;
-    renderCatalogAndStats();
-  });
-
-  dom.sortFilter.addEventListener('change', event => {
-    appState.filters.sortBy = event.target.value;
-    renderCatalogAndStats();
-  });
-
-  dom.resetFilterBtn.addEventListener('click', () => {
-    resetAllFilters();
-  });
-
-  dom.emptyResetBtn.addEventListener('click', () => {
-    resetAllFilters();
-  });
-
-  // Tab Koleksi Beans Nusantara (Default UMKM Ranum)
-  dom.sourceCoffeeBtn.addEventListener('click', () => {
-    recordSuccessfulSyncTimestamp();
-    activateDataset(
-      NUSANTARA_BEANS_CATALOG,
-      'coffee_nusantara',
-      'Menampilkan 12 varian biji kopi Nusantara dari UMKM Ranum (Aceh Gayo, Mandheling, Lintong, Kintamani, Preanger, Ijen, Toraja, Flores, Papua, dan Robusta).'
-    );
-  });
-
-  // Tab Katalog Mitra REST API (https://dummyjson.com/products)
-  dom.sourceApiBtn.addEventListener('click', () => {
-    if (appState.apiProducts.length > 0) {
-      activateDataset(
-        appState.apiProducts,
-        'api',
-        'Menampilkan ' +
-          appState.apiProducts.length +
-          ' produk dari endpoint REST API https://dummyjson.com/products.'
-      );
-    } else {
-      loadApiCatalog(false, true);
-    }
-  });
-
-  dom.refreshCatalogBtn.addEventListener('click', () => {
-    if (appState.activeSource === 'api') {
-      loadApiCatalog(false, true);
-    } else {
-      loadApiCatalog(false, false);
-    }
-  });
-
-  dom.simulateErrorBtn.addEventListener('click', () => {
-    loadApiCatalog(true, true);
-  });
-
-  dom.retryFetchBtn.addEventListener('click', () => {
-    if (appState.activeSource === 'api') {
-      loadApiCatalog(false, true);
-    } else {
-      loadApiCatalog(false, false);
-    }
-  });
-
-  dom.fallbackSnapshotBtn.addEventListener('click', () => {
-    recordSuccessfulSyncTimestamp();
-    activateDataset(
-      NUSANTARA_BEANS_CATALOG,
-      'coffee_nusantara',
-      'Menampilkan 12 varian biji kopi Nusantara dari UMKM Ranum.'
-    );
-  });
-
-  dom.modalCloseBtn.addEventListener('click', () => {
-    closeProductModal();
-  });
-
+  // Modal
+  dom.modalCloseBtn.addEventListener('click', closeProductModal);
   dom.productModal.addEventListener('click', event => {
-    if (event.target === dom.productModal) {
-      closeProductModal();
-    }
+    if (event.target === dom.productModal) closeProductModal();
   });
-
   dom.modalInquireBtn.addEventListener('click', () => {
     const selected = appState.selectedModalProduct;
     closeProductModal();
-    if (selected) {
-      dom.inquiryProduct.value = selected.title;
-      const inquirySection = document.getElementById('konsultasi');
-      if (inquirySection) {
-        inquirySection.scrollIntoView({ behavior: 'smooth' });
-      }
-      dom.inquiryName.focus();
-    }
+    if (!selected) return;
+    dom.inquiryProduct.value = String(selected.id);
+    setFieldError('product', '');
+    document.getElementById('konsultasi').scrollIntoView({ behavior: 'smooth' });
+    dom.inquiryName.focus({ preventScroll: true });
   });
 
-  dom.inquiryForm.addEventListener('submit', event => {
-    event.preventDefault();
-    clearFormErrors();
-    dom.inquirySuccessBanner.classList.add('hidden');
+  // Form: validasi saat blur, perbarui saat mengetik jika sudah ditandai error
+  Object.keys(dom.formFields).forEach(field => {
+    const { input } = dom.formFields[field];
+    const liveEvent = input.tagName === 'SELECT' ? 'change' : 'input';
 
-    const result = validateInquiryForm({
-      name: dom.inquiryName.value,
-      contact: dom.inquiryContact.value,
-      product: dom.inquiryProduct.value,
-      purpose: dom.inquiryPurpose.value,
-      notes: dom.inquiryNotes.value
+    input.addEventListener('blur', () => {
+      if (input.value.trim() !== '' || input.dataset.touched === 'true') validateSingleField(field);
+      input.dataset.touched = 'true';
     });
-
-    if (!result.isValid) {
-      setFieldError(dom.inquiryName, dom.inquiryNameError, result.errors.name);
-      setFieldError(dom.inquiryContact, dom.inquiryContactError, result.errors.contact);
-      setFieldError(dom.inquiryProduct, dom.inquiryProductError, result.errors.product);
-      setFieldError(dom.inquiryNotes, dom.inquiryNotesError, result.errors.notes);
-      return;
-    }
-
-    const newRecord = {
-      ...result.cleaned,
-      createdAt: new Date().toLocaleString('id-ID', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    };
-
-    const existing = safeGetStorage(API_CONFIG.STORAGE_KEYS.SAVED_INQUIRIES, []);
-    const updated = [newRecord, ...(Array.isArray(existing) ? existing : [])].slice(0, 10);
-    safeSetStorage(API_CONFIG.STORAGE_KEYS.SAVED_INQUIRIES, updated);
-    renderSavedInquiries();
-
-    dom.inquirySuccessBody.textContent =
-      'Terima kasih, ' +
-      result.cleaned.name +
-      '. Permintaan informasi untuk "' +
-      result.cleaned.product +
-      '" (' +
-      result.cleaned.purpose +
-      ') telah dicatat pada perangkat ini oleh etalase Ranum.';
-    dom.inquirySuccessBanner.classList.remove('hidden');
-    dom.inquiryForm.reset();
+    input.addEventListener(liveEvent, () => {
+      if (input.getAttribute('aria-invalid') === 'true') validateSingleField(field);
+      updateFieldHints();
+    });
   });
 
-  dom.resetInquiryBtn.addEventListener('click', () => {
+  dom.inquiryForm.addEventListener('submit', handleInquirySubmit);
+  dom.inquiryForm.addEventListener('reset', () => {
     clearFormErrors();
     dom.inquirySuccessBanner.classList.add('hidden');
+    Object.values(dom.formFields).forEach(({ input }) => delete input.dataset.touched);
+    // Nilai input baru kosong setelah event reset selesai diproses
+    setTimeout(updateFieldHints, 0);
   });
 
   dom.clearInquiriesBtn.addEventListener('click', () => {
-    safeSetStorage(API_CONFIG.STORAGE_KEYS.SAVED_INQUIRIES, []);
+    safeSetStorage(STORAGE_KEYS.SAVED_INQUIRIES, []);
     renderSavedInquiries();
   });
 }
 
+/* -------------------------------------------------------------------------
+   15. Inisialisasi
+   ------------------------------------------------------------------------- */
+
 document.addEventListener('DOMContentLoaded', () => {
   cacheDomElements();
-  updateTimestampDisplay();
-  renderSavedInquiries();
+  appState.lastSuccessAt = readStoredTimestamp();
   bindEvents();
-  // Tampilkan katalog Beans Nusantara Ranum dan jalankan sinkronisasi REST API di latar
-  loadApiCatalog(false, false);
+  renderSavedInquiries();
+  updateFieldHints();
+  loadProducts();
 });

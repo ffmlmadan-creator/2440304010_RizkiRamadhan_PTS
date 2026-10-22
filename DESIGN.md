@@ -19,7 +19,7 @@
 - **Header**: Ringkas di bagian atas berisi wordmark **Ranum**, kolom pencarian cepat, dan navigasi ke bagian halaman.
 - **Hero Banner**: Lebar penuh dengan komposisi dua kolom seimbang pada desktop (headline pemasaran, deskripsi singkat, dan CTA di sisi kiri; visual kemasan kopi **Ranum** di sisi kanan).
 - **Bagian Produk Pilihan & Katalog**: Dilengkapi filter kategori asal biji kopi Nusantara, filter ketersediaan stok, pencarian, serta Ringkasan Katalog yang menyatu secara natural di bar informasi katalog.
-- **Grid Produk**: Teratur dan lapang (3 kolom pada desktop `>= 1024px`, 2 kolom pada tablet `~768px`, 1 kolom pada mobile `<= 480px`), rasio gambar kemasan 4:3 konsisten, informasi harga dan stok mudah dipindai.
+- **Grid Produk**: Teratur, modern, dan lapang (5 kolom pada desktop lebar, 4 kolom pada desktop medium, 3 kolom pada tablet, 2 kolom pada tablet kecil/mobile landscape, 1 kolom pada mobile portrait `<= 480px`), rasio gambar produk 4:3 konsisten, informasi harga dan stok mudah dipindai.
 - **Batasan Teknik Visual**: Tanpa gradient latar, tanpa glassmorphism, tanpa bayangan tebal, tanpa sudut pill di seluruh elemen, dan tanpa animasi dekoratif berlebihan.
 
 ## 5. Liveliness Dials & Design Read
